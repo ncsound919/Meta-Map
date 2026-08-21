@@ -78,6 +78,13 @@ export const ModelValidationBacktestingSuite: React.FC<ModelValidationBacktestin
   const [isWorkerRunning, setIsWorkerRunning] = useState<boolean>(false);
   const [lastWorkerResult, setLastWorkerResult] = useState<WorkerJobResult | null>(null);
 
+  // Gillespie Custom Biophysical Parameters
+  const [gillespieTrajectories, setGillespieTrajectories] = useState<number>(5000);
+  const [gillespieHours, setGillespieHours] = useState<number>(72);
+  const [gillespieShearStress, setGillespieShearStress] = useState<number>(22.0);
+  const [gillespieNkActivity, setGillespieNkActivity] = useState<number>(80.0);
+  const [gillespieInitialCluster, setGillespieInitialCluster] = useState<number>(3);
+
   const runWorkerJob = async () => {
     setIsWorkerRunning(true);
     setWorkerProgress(0);
@@ -88,7 +95,13 @@ export const ModelValidationBacktestingSuite: React.FC<ModelValidationBacktestin
       if (workerJobType === 'PDE_GRID_SWEEP') {
         payload = { nx: 48, ny: 48, steps: 120, hypoxiaThreshold: 10, baseStiffness: 35 };
       } else if (workerJobType === 'MONTE_CARLO_GILLESPIE') {
-        payload = { trajectories: 5000, hours: 72, shearStress: 22.0, nkActivity: 80.0 };
+        payload = {
+          trajectories: gillespieTrajectories,
+          hours: gillespieHours,
+          shearStress: gillespieShearStress,
+          nkActivity: gillespieNkActivity,
+          initialClusterSize: gillespieInitialCluster
+        };
       } else if (workerJobType === 'RK45_PARAMETER_SWEEP') {
         payload = { iterations: 2400 };
       }
@@ -656,6 +669,65 @@ export const ModelValidationBacktestingSuite: React.FC<ModelValidationBacktestin
                 </div>
               </div>
 
+              {/* Gillespie Parameter Sliders */}
+              {workerJobType === 'MONTE_CARLO_GILLESPIE' && (
+                <div className="space-y-4 pt-3 border-t border-slate-800">
+                  <div className="text-[11px] font-bold font-mono text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <Sliders className="w-3.5 h-3.5" /> Gillespie Biophysics
+                  </div>
+                  
+                  <Slider
+                    label="Simulated Trajectories:"
+                    min={1000}
+                    max={10000}
+                    step={1000}
+                    value={gillespieTrajectories}
+                    onChange={setGillespieTrajectories}
+                    valueDisplay={<>{gillespieTrajectories.toLocaleString()}</>}
+                  />
+
+                  <Slider
+                    label="Initial Cluster Size:"
+                    min={1}
+                    max={10}
+                    step={1}
+                    value={gillespieInitialCluster}
+                    onChange={setGillespieInitialCluster}
+                    valueDisplay={<>{gillespieInitialCluster} cells</>}
+                  />
+
+                  <Slider
+                    label="Transit Duration:"
+                    min={12}
+                    max={168}
+                    step={12}
+                    value={gillespieHours}
+                    onChange={setGillespieHours}
+                    valueDisplay={<>{gillespieHours} hrs</>}
+                  />
+
+                  <Slider
+                    label="Vessel Shear Stress:"
+                    min={5.0}
+                    max={50.0}
+                    step={1.0}
+                    value={gillespieShearStress}
+                    onChange={setGillespieShearStress}
+                    valueDisplay={<>{gillespieShearStress.toFixed(1)} dyn/cm²</>}
+                  />
+
+                  <Slider
+                    label="NK Immune Clearance:"
+                    min={10.0}
+                    max={100.0}
+                    step={5.0}
+                    value={gillespieNkActivity}
+                    onChange={setGillespieNkActivity}
+                    valueDisplay={<>{gillespieNkActivity.toFixed(0)}%</>}
+                  />
+                </div>
+              )}
+
               {/* Progress Bar */}
               {isWorkerRunning && (
                 <div className="space-y-1.5 pt-2">
@@ -722,6 +794,86 @@ export const ModelValidationBacktestingSuite: React.FC<ModelValidationBacktestin
                   No active worker tasks dispatched yet. Click &quot;Dispatch Worker Task&quot; above to run non-blocking heavy numerical grids off the main thread.
                 </div>
               )}
+            </div>
+          </div>
+
+          {/* Scientific Grounding & Computational Oncology Reference Framework Card */}
+          <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl space-y-6 shadow-xl">
+            <div className="flex items-center gap-2 border-b border-slate-800 pb-4">
+              <Compass className="w-5 h-5 text-emerald-400" />
+              <div>
+                <h4 className="font-bold text-sm text-white">
+                  Scientific Grounding & Computational Oncology Reference Framework
+                </h4>
+                <p className="text-[11px] text-slate-400">
+                  Consensus paradigm aligning digital patient twins with mechanistic biophysics, SCIMET evolutionary theories, and PhysiCell microenvironment standards.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Pillar 1: Physiological Bottlenecks */}
+              <div className="space-y-3 font-mono text-xs p-4 bg-slate-950 rounded-xl border border-slate-800/80">
+                <div className="flex items-center gap-1.5 text-cyan-400 font-bold uppercase tracking-wider text-[11px]">
+                  <Activity className="w-4 h-4" /> I. Biophysical Bottlenecks
+                </div>
+                <p className="text-slate-300 text-[11px] leading-relaxed">
+                  Rather than black-box regressions on static EHR tables, the twin simulates the three critical physiological barriers of metastasis:
+                </p>
+                <ul className="space-y-1.5 text-slate-400 text-[10px] list-disc list-inside">
+                  <li><strong className="text-white">Intravasation Timing:</strong> Linked directly to local matrix stiffness, interstitial pressures, and spatial 3D hypoxia.</li>
+                  <li><strong className="text-white">Circulatory Survival:</strong> Handled by our upgraded continuous-time <span className="text-amber-400">Gillespie SSA Solver</span> simulating exact shear-lysis vs immune-evasion trajectories.</li>
+                  <li><strong className="text-white">Organotropism / Seeding:</strong> Models physical capture, capillary wall shear stress, and local microenvironmental niches (e.g. liver vs lung).</li>
+                </ul>
+              </div>
+
+              {/* Pillar 2: Clonal Dissemination & Evolution */}
+              <div className="space-y-3 font-mono text-xs p-4 bg-slate-950 rounded-xl border border-slate-800/80">
+                <div className="flex items-center gap-1.5 text-purple-400 font-bold uppercase tracking-wider text-[11px]">
+                  <Dna className="w-4 h-4" /> II. SCIMET Evolutionary Modes
+                </div>
+                <p className="text-slate-300 text-[11px] leading-relaxed">
+                  Accounts for tumor spatial architecture and modes of evolution to avoid confounded clinical interpretations of metastatic timing:
+                </p>
+                <ul className="space-y-1.5 text-slate-400 text-[10px] list-disc list-inside">
+                  <li><strong className="text-white">Monoclonal Selection:</strong> Single clonal wave dissemination leading to localized metastatic expansion.</li>
+                  <li><strong className="text-white">Multiclonal Dissemination:</strong> Co-circulating polyclonal clusters with enhanced survival rates against hemodynamic shear stress.</li>
+                  <li><strong className="text-white">Genomic Grounding:</strong> Couples somatic mutation allele frequencies (ctDNA VAF) to the spatial 3D tumor tree topology.</li>
+                </ul>
+              </div>
+
+              {/* Pillar 3: Clinical Trials & Enrichments */}
+              <div className="space-y-3 font-mono text-xs p-4 bg-slate-950 rounded-xl border border-slate-800/80">
+                <div className="flex items-center gap-1.5 text-emerald-400 font-bold uppercase tracking-wider text-[11px]">
+                  <Shield className="w-4 h-4" /> III. Validated Trial Endpoints
+                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-900">NICHE REALITY</span>
+                </div>
+                <p className="text-slate-300 text-[11px] leading-relaxed">
+                  Avoids overpromising complete body health. Focuses strictly on narrow, highly actionable predictive tasks in oncology research:
+                </p>
+                <ul className="space-y-1.5 text-slate-400 text-[10px] list-disc list-inside">
+                  <li><strong className="text-white">Synthetic Control Arms:</strong> Reducing patient recruitment fatigue by simulating baseline cohorts.</li>
+                  <li><strong className="text-white">Prognostic Enrichment:</strong> Identifying rapid progressors early to demonstrate therapeutic efficacy in randomized trials.</li>
+                  <li><strong className="text-white">Pre-operative Rehearsal:</strong> Planning resection bounds to minimize fatigue and recurrence.</li>
+                </ul>
+              </div>
+            </div>
+
+            <div className="p-4 bg-slate-950/40 rounded-xl border border-slate-800/60 flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="flex items-start gap-2.5">
+                <Info className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                <p className="text-[11px] text-slate-400 max-w-4xl font-mono leading-normal">
+                  <strong className="text-slate-200">PhysiCell Community Calibration:</strong> Our stochastic rates are calibrated using the PhysiCell Multi-Cellular Simulator Slack consensus. The Gillespie solver is testable in isolation (downscaled trajectory runs) and scales smoothly to represent full patient-level outcomes.
+                </p>
+              </div>
+              <a
+                href="https://physicell.org/"
+                target="_blank"
+                referrerPolicy="no-referrer"
+                className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg border border-slate-700 text-xs font-mono font-bold transition-all shrink-0 text-center"
+              >
+                Explore PhysiCell
+              </a>
             </div>
           </div>
         </div>

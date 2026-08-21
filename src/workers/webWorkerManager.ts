@@ -6,6 +6,10 @@
  * Prevents main UI thread blocking and frame drops during intense biophysical parameter exploration.
  */
 
+import { PDE_SOLVER_SCRIPT } from './pdeSolverWorker';
+import { GILLESPIE_SCRIPT } from './gillespieWorker';
+import { RK45_SWEEP_SCRIPT } from './rk45SweepWorker';
+
 export interface WorkerComputeJob<T = any> {
   id: string;
   type: 'PDE_GRID_SWEEP' | 'MONTE_CARLO_GILLESPIE' | 'RK45_PARAMETER_SWEEP' | 'HARRELL_CONCORDANCE_BOOTSTRAP';
@@ -24,12 +28,17 @@ export interface WorkerJobResult<R = any> {
   jobId: string;
   success: boolean;
   executionTimeMs: number;
+  executionDurationMs: number;
+  jobType: string;
+  status: string;
+  timestamp: number;
   threadId: number;
   data: R;
+  metrics: Record<string, any>;
   error?: string;
 }
 
-// Inline Worker code string for 100% reliable execution in all browser & iframe contexts
+// Inline Worker code string composed of highly granular computation scripts per module type
 const WORKER_SCRIPT_BODY = `
 self.onmessage = function(e) {
   var msg = e.data;
@@ -39,163 +48,10 @@ self.onmessage = function(e) {
   var startTime = performance.now();
 
   try {
-    if (type === 'PDE_GRID_SWEEP') {
-      var nx = payload.nx || 32;
-      var ny = payload.ny || 32;
-      var steps = payload.steps || 50;
-      var hypoxiaThreshold = payload.hypoxiaThreshold || 10;
-      var baseStiffness = payload.baseStiffness || 30;
-
-      // 2D Array allocation
-      var grid = new Float32Array(nx * ny);
-      var stiffnessGrid = new Float32Array(nx * ny);
-
-      // Initial conditions (radial Gaussian gradient)
-      for (var y = 0; y < ny; y++) {
-        for (var x = 0; x < nx; x++) {
-          var dx = (x - nx / 2);
-          var dy = (y - ny / 2);
-          var distSq = dx * dx + dy * dy;
-          var idx = y * nx + x;
-          grid[idx] = Math.max(2.0, 45.0 * (1.0 - Math.exp(-distSq / (nx * 2))));
-          stiffnessGrid[idx] = baseStiffness + (grid[idx] < hypoxiaThreshold ? 25.0 : 5.0);
-        }
-      }
-
-      // Time integration (ADI Finite Difference Stencil)
-      for (var s = 0; s < steps; s++) {
-        for (var y = 1; y < ny - 1; y++) {
-          for (var x = 1; x < nx - 1; x++) {
-            var i = y * nx + x;
-            var lap = (grid[i + 1] + grid[i - 1] + grid[i + nx] + grid[i - nx] - 4.0 * grid[i]);
-            grid[i] += 0.08 * lap - 0.05 * (grid[i] / (5.0 + grid[i]));
-          }
-        }
-
-        if (s % 10 === 0) {
-          self.postMessage({
-            type: 'PROGRESS',
-            jobId: jobId,
-            progressPct: Math.round((s / steps) * 100),
-            currentStep: s,
-            totalSteps: steps
-          });
-        }
-      }
-
-      var execTime = performance.now() - startTime;
-      self.postMessage({
-        type: 'RESULT',
-        jobId: jobId,
-        success: true,
-        executionTimeMs: execTime,
-        data: {
-          gridSummary: {
-            nx: nx,
-            ny: ny,
-            steps: steps,
-            minO2: 2.1,
-            meanO2: 28.4,
-            hypoxicFractionPct: 34.2,
-            peakStiffnessKpa: baseStiffness + 25.0
-          }
-        }
-      });
-
-    } else if (type === 'MONTE_CARLO_GILLESPIE') {
-      var nTrajectories = payload.trajectories || 2500;
-      var hours = payload.hours || 48;
-      var shearStress = payload.shearStress || 18.0;
-      var nkActivity = payload.nkActivity || 75.0;
-
-      var survivalCounts = [];
-      var lysedCounts = [];
-
-      for (var t = 0; t < nTrajectories; t++) {
-        var cells = payload.initialClusterSize || 3;
-        var alive = true;
-
-        for (var h = 0; h < hours && alive; h++) {
-          // Shear lysis hazard
-          var shearRate = 0.015 * (shearStress / 15.0);
-          if (Math.random() < shearRate) {
-            cells--;
-            if (cells <= 0) {
-              alive = false;
-              lysedCounts.push(h);
-              break;
-            }
-          }
-          // NK immune clearance hazard
-          var nkRate = 0.02 * (nkActivity / 50.0);
-          if (Math.random() < nkRate) {
-            alive = false;
-            break;
-          }
-        }
-        if (alive) survivalCounts.push(cells);
-
-        if (t % 500 === 0) {
-          self.postMessage({
-            type: 'PROGRESS',
-            jobId: jobId,
-            progressPct: Math.round((t / nTrajectories) * 100),
-            currentStep: t,
-            totalSteps: nTrajectories
-          });
-        }
-      }
-
-      var execTime = performance.now() - startTime;
-      self.postMessage({
-        type: 'RESULT',
-        jobId: jobId,
-        success: true,
-        executionTimeMs: execTime,
-        data: {
-          totalTrajectories: nTrajectories,
-          survivedClusters: survivalCounts.length,
-          survivalRatePct: Number(((survivalCounts.length / nTrajectories) * 100).toFixed(2)),
-          meanTransitSurvivalHours: 32.4
-        }
-      });
-
-    } else if (type === 'RK45_PARAMETER_SWEEP') {
-      var iterations = payload.iterations || 1200;
-      var sweepResults = [];
-
-      for (var i = 0; i < iterations; i++) {
-        var v0 = 10 + i * 0.5;
-        var a = 0.2 + (i % 20) * 0.01;
-        var b = 0.04 + (i % 10) * 0.002;
-        var vT = v0 * Math.exp((a / b) * (1 - Math.exp(-b * 24)));
-        sweepResults.push({ v0: v0, vT: vT, growthRatio: vT / v0 });
-
-        if (i % 300 === 0) {
-          self.postMessage({
-            type: 'PROGRESS',
-            jobId: jobId,
-            progressPct: Math.round((i / iterations) * 100),
-            currentStep: i,
-            totalSteps: iterations
-          });
-        }
-      }
-
-      var execTime = performance.now() - startTime;
-      self.postMessage({
-        type: 'RESULT',
-        jobId: jobId,
-        success: true,
-        executionTimeMs: execTime,
-        data: {
-          totalEvaluations: iterations,
-          meanGrowthRatio: 3.42,
-          maxTumorVolumeMm3: 450.2
-        }
-      });
-
-    } else {
+    ${PDE_SOLVER_SCRIPT.trim()}
+    else ${GILLESPIE_SCRIPT.trim()}
+    else ${RK45_SWEEP_SCRIPT.trim()}
+    else {
       throw new Error('Unknown Worker Job Type: ' + type);
     }
   } catch (err) {
@@ -218,6 +74,7 @@ export class WebWorkerComputeManager {
     resolve: (val: any) => void;
     reject: (err: any) => void;
     onProgress?: (progress: WorkerProgressUpdate) => void;
+    jobType: string;
   }> = new Map();
   private workerRoundRobin: number = 0;
   private isInitialized: boolean = false;
@@ -271,9 +128,21 @@ export class WebWorkerComputeManager {
       if (entry) {
         this.activeJobs.delete(msg.jobId);
         if (msg.success) {
+          const metrics = msg.data && msg.data.gridSummary 
+            ? msg.data.gridSummary 
+            : (msg.data || {});
+
           entry.resolve({
-            ...msg,
-            threadId
+            jobId: msg.jobId,
+            success: true,
+            executionTimeMs: msg.executionTimeMs,
+            executionDurationMs: Math.round(msg.executionTimeMs),
+            jobType: entry.jobType,
+            status: 'COMPLETED_SUCCESS',
+            timestamp: Date.now(),
+            threadId,
+            data: msg.data,
+            metrics: metrics
           });
         } else {
           entry.reject(new Error(msg.error || 'Worker execution failed'));
@@ -301,7 +170,7 @@ export class WebWorkerComputeManager {
     this.workerRoundRobin++;
 
     return new Promise((resolve, reject) => {
-      this.activeJobs.set(jobId, { resolve, reject, onProgress });
+      this.activeJobs.set(jobId, { resolve, reject, onProgress, jobType: type });
       worker.postMessage({ id: jobId, type, payload });
     });
   }
@@ -310,16 +179,25 @@ export class WebWorkerComputeManager {
     const t0 = performance.now();
     // Non-blocking microtask fallback
     await new Promise(r => setTimeout(r, 10));
+    const duration = performance.now() - t0;
     return {
       jobId,
       success: true,
-      executionTimeMs: performance.now() - t0,
+      executionTimeMs: duration,
+      executionDurationMs: Math.round(duration),
+      jobType: type,
+      status: 'COMPLETED_SUCCESS_FALLBACK',
+      timestamp: Date.now(),
       threadId: 0,
       data: {
         fallbackMode: true,
         type,
         message: 'Executed via non-blocking main-thread fallback queue'
-      } as unknown as R
+      } as unknown as R,
+      metrics: {
+        fallbackMode: 1,
+        concurrencyFallback: 1
+      }
     };
   }
 

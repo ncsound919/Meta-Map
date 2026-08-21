@@ -9,7 +9,7 @@
     "start": "node dist/server.cjs",
     "clean": "rm -rf dist server.cjs",
     "lint": "tsc --noEmit",
-    "test:ci": "tsx scripts/run_numerical_ci.ts"
+    "test:ci": "tsx src/math/run_numerical_ci.ts"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",

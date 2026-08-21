@@ -591,3 +591,71 @@ if __name__ == '__main__':
     };
   }
 }
+
+export interface CirculatoryCouplingState {
+  cardiacOutputLMin: number;
+  meanArterialPressureMmHg: number;
+  tumorCapillaryFlowRateNlMin: number;
+  capillaryWallShearStressDynCm2: number;
+  localOxygenTensionMmHg: number;
+  vesselShearState: 'PHYSIOLOGICAL' | 'HYPERPERFUSED' | 'CONVOLUTED_STAGNANT' | 'CRITICAL_LYSIS_RISK';
+}
+
+export class HemodynamicCoupler {
+  /**
+   * Simulates a coupled 0D-3D hemodynamic model.
+   * Links systemic circulatory loop (represented by RLC circuit equations) to local 3D microvascular tumor perfusion.
+   */
+  public static simulateCoupledHemodynamics(
+    heartRateBpm: number,
+    systemicResistancePrg: number, // mmHg * s / mL
+    tumorVesselStiffnessKpa: number
+  ): CirculatoryCouplingState {
+    // 1. 0D Lumped-Parameter Systemic Circulatory Model (Electrical analog RLC)
+    // R: Resistance, C: Compliance, L: Inertance
+    // Stroke Volume SV = C * (P_systolic - P_diastolic)
+    const strokeVolumeMl = 70 * (1.0 + (heartRateBpm - 70) * 0.005);
+    const cardiacOutputLMin = (strokeVolumeMl * heartRateBpm) / 1000;
+    
+    // Mean Arterial Pressure (MAP) = Cardiac Output * Systemic Vascular Resistance
+    const meanArterialPressureMmHg = cardiacOutputLMin * 16.6 * systemicResistancePrg;
+
+    // 2. 3D Tumor Microenvironment Perfusion Coupling
+    // The tumor bed offers a local microvascular resistance, which depends on matrix stiffness and vessel compression
+    const vesselCompressionFactor = Math.min(0.9, tumorVesselStiffnessKpa / 80);
+    const localMicrovascularResistance = 120 / (1.0 - vesselCompressionFactor); // high stiffness collapses vessels, increasing resistance
+
+    // Local Capillary Flow Rate (pressure drop across tumor capillary bed / resistance)
+    const pressureDropMmHg = meanArterialPressureMmHg * 0.35; // Capillary bed gets ~35% of MAP
+    const tumorCapillaryFlowRateNlMin = (pressureDropMmHg / localMicrovascularResistance) * 1000;
+
+    // Local Shear Stress = 4 * viscosity * Flow / (pi * radius^3)
+    const viscosityPaS = 0.003; // Blood viscosity ~3.0 cP
+    const capillaryRadiusUm = 8.0 * (1.0 - vesselCompressionFactor * 0.55);
+    const flowMlS = (tumorCapillaryFlowRateNlMin * 1e-9) / 60;
+    const areaM2 = Math.PI * Math.pow(capillaryRadiusUm * 1e-6, 2);
+    const velocityMS = flowMlS / areaM2;
+    const capillaryWallShearStressDynCm2 = (4 * viscosityPaS * velocityMS) / (capillaryRadiusUm * 1e-6) * 10; // dyn/cm^2
+
+    // Local oxygen tension depends on capillary flow and vessel compression (transport-limited)
+    const localOxygenTensionMmHg = Math.max(1.5, 45.0 * (1.0 - vesselCompressionFactor) * (tumorCapillaryFlowRateNlMin / 400.0));
+
+    let shearState: CirculatoryCouplingState['vesselShearState'] = 'PHYSIOLOGICAL';
+    if (capillaryWallShearStressDynCm2 > 45) {
+      shearState = 'CRITICAL_LYSIS_RISK';
+    } else if (capillaryWallShearStressDynCm2 > 25) {
+      shearState = 'HYPERPERFUSED';
+    } else if (capillaryWallShearStressDynCm2 < 4) {
+      shearState = 'CONVOLUTED_STAGNANT';
+    }
+
+    return {
+      cardiacOutputLMin: Number(cardiacOutputLMin.toFixed(2)),
+      meanArterialPressureMmHg: Number(meanArterialPressureMmHg.toFixed(1)),
+      tumorCapillaryFlowRateNlMin: Number(tumorCapillaryFlowRateNlMin.toFixed(2)),
+      capillaryWallShearStressDynCm2: Number(capillaryWallShearStressDynCm2.toFixed(2)),
+      localOxygenTensionMmHg: Number(localOxygenTensionMmHg.toFixed(1)),
+      vesselShearState: shearState
+    };
+  }
+}

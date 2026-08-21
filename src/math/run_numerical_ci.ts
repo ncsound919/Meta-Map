@@ -12,7 +12,7 @@
  * - Probability bounds [0, 100%] conservation
  */
 
-import { AutomatedBiophysicalTestSuite } from '../src/math/automatedTestSuite';
+import { AutomatedBiophysicalTestSuite } from './automatedTestSuite';
 
 async function runCiSuite() {
   console.log('================================================================');

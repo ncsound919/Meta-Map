@@ -144,3 +144,93 @@ export class DigitalTwinTelemetryPipeline {
     return { month: 0, ctDnaVafPct: value };
   }
 }
+
+export interface StreamingTelemetryPacket {
+  packetId: string;
+  timestamp: string;
+  sensorId: string;
+  ctDnaVafPct: number;
+  radiomicsSldMm: number;
+  flowRateMlMin: number;
+}
+
+export class TelemetryStreamBuffer {
+  private queue: StreamingTelemetryPacket[] = [];
+  private maxCapacity: number;
+  private tokenBucket: { tokens: number; maxTokens: number; refillRatePerSec: number; lastRefillTime: number };
+
+  constructor(maxCapacity = 100, maxTokens = 10, refillRatePerSec = 2) {
+    this.maxCapacity = maxCapacity;
+    this.tokenBucket = {
+      tokens: maxTokens,
+      maxTokens,
+      refillRatePerSec,
+      lastRefillTime: Date.now()
+    };
+  }
+
+  /**
+   * Refills tokens based on elapsed time since last call
+   */
+  private refillTokens() {
+    const now = Date.now();
+    const elapsedSec = (now - this.tokenBucket.lastRefillTime) / 1000;
+    this.tokenBucket.tokens = Math.min(
+      this.tokenBucket.maxTokens,
+      this.tokenBucket.tokens + elapsedSec * this.tokenBucket.refillRatePerSec
+    );
+    this.tokenBucket.lastRefillTime = now;
+  }
+
+  /**
+   * Pushes an incoming telemetry packet with adaptive token-bucket backpressure.
+   * Dropping policy: Drops oldest packet if capacity is breached.
+   * Returns status explaining the outcome and current queue size.
+   */
+  public pushPacket(packet: StreamingTelemetryPacket): {
+    status: 'ACCEPTED' | 'THROTTLED' | 'WARNING_BACKPRESSURE' | 'DROPPED_OLD';
+    queueSize: number;
+    droppedCount: number;
+  } {
+    this.refillTokens();
+
+    let status: 'ACCEPTED' | 'THROTTLED' | 'WARNING_BACKPRESSURE' | 'DROPPED_OLD' = 'ACCEPTED';
+    let droppedCount = 0;
+
+    // Rate limiting / Throttling check
+    if (this.tokenBucket.tokens < 1) {
+      status = 'THROTTLED';
+    } else {
+      this.tokenBucket.tokens -= 1;
+    }
+
+    // Queue capacity management (Backpressure threshold triggers)
+    if (this.queue.length >= this.maxCapacity) {
+      // Drop oldest packet
+      this.queue.shift();
+      droppedCount = 1;
+      status = 'DROPPED_OLD';
+    } else if (this.queue.length > this.maxCapacity * 0.8) {
+      status = 'WARNING_BACKPRESSURE';
+    }
+
+    this.queue.push(packet);
+
+    return {
+      status,
+      queueSize: this.queue.length,
+      droppedCount
+    };
+  }
+
+  /**
+   * Polls a batch of packets from the buffer to feed the Kalman filter
+   */
+  public pollBatch(batchSize: number): StreamingTelemetryPacket[] {
+    return this.queue.splice(0, batchSize);
+  }
+
+  public getQueueLength(): number {
+    return this.queue.length;
+  }
+}

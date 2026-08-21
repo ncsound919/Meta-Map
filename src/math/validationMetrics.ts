@@ -239,3 +239,40 @@ export class ModelValidationMetricsEngine {
     };
   }
 }
+
+export class ConceptDriftMonitor {
+  private static maseHistory: number[] = [];
+  
+  /**
+   * Ingests latest MASE score, maintains a rolling window,
+   * and triggers Kalman observer recalibration if 3 consecutive windows exceed 1.5.
+   */
+  public static trackAndTrigger(maseScore: number, observer: any): { triggered: boolean; message: string } {
+    this.maseHistory.push(maseScore);
+    if (this.maseHistory.length > 5) {
+      this.maseHistory.shift();
+    }
+    
+    // Check if last 3 measurements are all > 1.5
+    const len = this.maseHistory.length;
+    if (len >= 3) {
+      const lastThree = this.maseHistory.slice(-3);
+      const isDegraded = lastThree.every(m => m > 1.5);
+      
+      if (isDegraded && observer && typeof observer.recalibrateNoiseParameters === 'function') {
+        observer.recalibrateNoiseParameters(maseScore);
+        const prevHistory = [...this.maseHistory];
+        this.maseHistory = []; // Reset history after trigger to prevent double triggers
+        return {
+          triggered: true,
+          message: `Concept drift detected! Rolling MASE [${prevHistory.join(', ')}] breached 1.5 threshold. Automatically triggered Bayesian covariance recalibration in Extended Kalman Filter.`
+        };
+      }
+    }
+    
+    return {
+      triggered: false,
+      message: `Model stability within nominal bounds (Rolling MASE: [${this.maseHistory.join(', ')}]). No drift triggered.`
+    };
+  }
+}

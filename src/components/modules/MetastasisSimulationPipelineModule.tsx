@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Slider } from '../ui/Slider';
+import { PipelineCodeExportModal } from './pipeline/PipelineCodeExportModal';
+import { ParameterGlobalSensitivityTornado } from './pipeline/ParameterGlobalSensitivityTornado';
+import { CrossSystemPipelineLaunchpad } from './pipeline/CrossSystemPipelineLaunchpad';
 
 import {
   Cpu,
@@ -1586,131 +1589,21 @@ export const MetastasisSimulationPipelineModule: React.FC<MetastasisSimulationPi
       </div>
 
       {/* Parameter Sensitivity Tornado Plot */}
-      <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4">
-        <div className="flex justify-between items-center border-b border-slate-800 pb-3">
-          <h3 className="font-bold text-white text-sm font-mono uppercase tracking-wide flex items-center gap-2">
-            <SlidersHorizontal className="w-4 h-4 text-cyan-400" /> Parameter Global Sensitivity Tornado Analysis
-          </h3>
-          <span className="text-[10px] font-mono text-slate-400">Sobol Global Sensitivity Indices ($S_i$)</span>
-        </div>
-
-        <div className="h-48 w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart layout="vertical" data={tornadoData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-              <XAxis type="number" stroke="#94a3b8" unit="%" label={{ value: 'Sensitivity Impact on Metastatic Risk (%)', position: 'insideBottom', offset: -2, fill: '#94a3b8', fontSize: 10 }} />
-              <YAxis type="category" dataKey="parameter" stroke="#94a3b8" width={200} tick={{ fontSize: 11 }} />
-              <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '8px', fontSize: '11px' }} />
-              <Bar dataKey="impactOnRiskPct" name="Risk Impact (%)" fill="#38bdf8" radius={[0, 4, 4, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
+      <ParameterGlobalSensitivityTornado tornadoData={tornadoData} />
 
       {/* Cross-System Interconnection Launchpad */}
-      {onNavigateModule && (
-        <div className="bg-slate-900 border border-cyan-500/30 p-5 rounded-2xl space-y-4 shadow-lg">
-          <div className="flex items-center gap-2 border-b border-slate-800 pb-3">
-            <Sparkles className="w-5 h-5 text-cyan-400" />
-            <h3 className="font-bold text-white text-sm font-mono uppercase tracking-wide">
-              Cross-System Pipeline Integration Launchpad
-            </h3>
-          </div>
-
-          <p className="text-xs text-slate-300">
-            Wire parameters from this multiscale simulation directly into MetaMap's specialized diagnostic and forecasting modules:
-          </p>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 text-xs font-mono">
-            <button
-              onClick={() => onNavigateModule('living_cinema', targetOrgan)}
-              className="p-3 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl flex flex-col items-center gap-1.5 text-center text-slate-200 transition-colors"
-            >
-              <Film className="w-4 h-4 text-cyan-400" />
-              <span>Living Cinema</span>
-            </button>
-
-            <button
-              onClick={() => onNavigateModule('cascade_twin', targetOrgan)}
-              className="p-3 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl flex flex-col items-center gap-1.5 text-center text-slate-200 transition-colors"
-            >
-              <Cpu className="w-4 h-4 text-indigo-400" />
-              <span>Cascade Twin</span>
-            </button>
-
-            <button
-              onClick={() => onNavigateModule('forecast_engine', targetOrgan)}
-              className="p-3 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl flex flex-col items-center gap-1.5 text-center text-slate-200 transition-colors"
-            >
-              <Brain className="w-4 h-4 text-emerald-400" />
-              <span>Forecast Engine</span>
-            </button>
-
-            <button
-              onClick={() => onNavigateModule('resistance_forge', targetOrgan)}
-              className="p-3 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl flex flex-col items-center gap-1.5 text-center text-slate-200 transition-colors"
-            >
-              <Swords className="w-4 h-4 text-amber-400" />
-              <span>Resistance Forge</span>
-            </button>
-
-            <button
-              onClick={() => onNavigateModule('proactive_interception', targetOrgan)}
-              className="p-3 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl flex flex-col items-center gap-1.5 text-center text-slate-200 transition-colors"
-            >
-              <Stethoscope className="w-4 h-4 text-rose-400" />
-              <span>Interception</span>
-            </button>
-
-            <button
-              onClick={() => onNavigateModule('workflow')}
-              className="p-3 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl flex flex-col items-center gap-1.5 text-center text-slate-200 transition-colors"
-            >
-              <Play className="w-4 h-4 text-cyan-400" />
-              <span>HPC Workflow</span>
-            </button>
-          </div>
-        </div>
-      )}
+      <CrossSystemPipelineLaunchpad onNavigateModule={onNavigateModule} targetOrgan={targetOrgan} />
 
       {/* PhysiCell / SISTEM Code Exporter Modal */}
-      {showCodeExportModal && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-cyan-500/40 rounded-2xl p-6 max-w-3xl w-full max-h-[85vh] overflow-y-auto space-y-4 shadow-2xl">
-            <div className="flex justify-between items-center border-b border-slate-800 pb-3">
-              <div className="flex items-center gap-2">
-                <Terminal className="w-5 h-5 text-cyan-400" />
-                <h3 className="font-bold text-white text-base font-mono">
-                  PhysiCell Configuration XML Script Export
-                </h3>
-              </div>
-              <button
-                onClick={() => setShowCodeExportModal(false)}
-                className="text-slate-400 hover:text-white font-mono font-bold text-sm px-2 py-1 rounded bg-slate-800"
-              >
-                ✕ Close
-              </button>
-            </div>
-
-            <p className="text-xs text-slate-300 font-mono">
-              Executable PhysiCell configuration XML grounded with your configured biophysical slider values (Hypoxia: {oxygenHypoxiaThreshold} mmHg, EMT: {emtSwitchProbability}, LOX: {loxMatrixStiffnessKpa} kPa, Shear: {shearStressDynCm2} dyn/cm²):
-            </p>
-
-            <pre className="bg-slate-950 p-4 rounded-xl border border-slate-800 text-[11px] font-mono text-cyan-300 overflow-x-auto leading-relaxed">
-              {generatedPhysiCellXML}
-            </pre>
-
-            <div className="flex justify-end gap-2 pt-2">
-              <button
-                onClick={() => navigator.clipboard.writeText(generatedPhysiCellXML)}
-                className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs rounded-lg font-mono transition-colors"
-              >
-                Copy to Clipboard
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <PipelineCodeExportModal
+        isOpen={showCodeExportModal}
+        onClose={() => setShowCodeExportModal(false)}
+        oxygenHypoxiaThreshold={oxygenHypoxiaThreshold}
+        emtSwitchProbability={emtSwitchProbability}
+        loxMatrixStiffnessKpa={loxMatrixStiffnessKpa}
+        shearStressDynCm2={shearStressDynCm2}
+        generatedPhysiCellXML={generatedPhysiCellXML}
+      />
     </div>
   );
 };

@@ -314,6 +314,19 @@ export class DigitalTwinKalmanObserver {
     return this.vectorToState(this.state);
   }
 
+  /**
+   * Recalibrates Kalman process and measurement noise covariances
+   * triggered by continuous model degradation (MASE threshold breach).
+   */
+  public recalibrateNoiseParameters(maseScore: number) {
+    console.log(`[Kalman Recalibration] Triggered auto-retuning loop. Current MASE: ${maseScore}. Tuning Q and R process matrices.`);
+    // Tune process noise upwards to make the filter adapt faster to rapid biological shifts
+    const scaleFactor = Math.min(3.0, 1.0 + (maseScore - 1.0) * 2.0);
+    this.Q = this.Q.map(row => row.map(v => v * scaleFactor));
+    // Narrow observation noise to trust real incoming clinical signals more during drift
+    this.R = this.R.map(row => row.map(v => v / scaleFactor));
+  }
+
   private vectorToState(v: number[]): LatentStateVector {
     return {
       vPrimaryMm3: Math.round(v[0]),

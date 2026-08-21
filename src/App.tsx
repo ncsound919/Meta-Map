@@ -1,36 +1,46 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { Navbar } from './components/Navbar';
 import { MetastasisStageFilter } from './components/MetastasisStageFilter';
-import { MetastasisAtlasBrowser } from './components/modules/MetastasisAtlasBrowser';
-import { LivingMetastasisCinema } from './components/modules/LivingMetastasisCinema';
-import { CascadeTwinSimulator } from './components/modules/CascadeTwinSimulator';
-import { MetastasisForecastEngine } from './components/modules/MetastasisForecastEngine';
-import { CausalMetastasisOracle } from './components/modules/CausalMetastasisOracle';
-import { ResistanceForgeModule } from './components/modules/ResistanceForgeModule';
-import { OntologyKnowledgeGraphModule } from './components/modules/OntologyKnowledgeGraphModule';
-import { BottleneckResolverModule } from './components/modules/BottleneckResolverModule';
-import { PrimaryMetPairExplorer } from './components/modules/PrimaryMetPairExplorer';
-
-
-import { SingleCellStateNavigator } from './components/modules/SingleCellStateNavigator';
-import { PathwayNetworkModule } from './components/modules/PathwayNetworkModule';
-import { LongitudinalTrajectoryTracker } from './components/modules/LongitudinalTrajectoryTracker';
-import { ClinicalOutcomeVisualization } from './components/modules/ClinicalOutcomeVisualization';
-import { MultidimensionalRouteMap } from './components/modules/MultidimensionalRouteMap';
-import { MultiOmicMatrixHeatmap } from './components/modules/MultiOmicMatrixHeatmap';
-import { WorkflowEngine } from './components/modules/WorkflowEngine';
-import { GeminiMetastasisAssistant } from './components/modules/GeminiMetastasisAssistant';
 import { LabGradeCalibrationModal } from './components/LabGradeCalibrationModal';
-import { ClinicalProactiveInterceptionModule } from './components/modules/ClinicalProactiveInterceptionModule';
-import { ClinicalDataIngestionHub } from './components/modules/ClinicalDataIngestionHub';
-import { ModelValidationBacktestingSuite } from './components/modules/ModelValidationBacktestingSuite';
-import { MetastasisHpcComputeViewer } from './components/modules/MetastasisHpcComputeViewer';
-import { MetastasisSimulationPipelineModule } from './components/modules/MetastasisSimulationPipelineModule';
-import { CirculatorySimulatorModule } from './components/modules/CirculatorySimulatorModule';
-import { TumorEvolutionMathEngineModule } from './components/modules/TumorEvolutionMathEngineModule';
-import { OrganColonizationSandboxModule } from './components/modules/OrganColonizationSandboxModule';
-import { ImmuneInteractionGridModule } from './components/modules/ImmuneInteractionGridModule';
 import { UnifiedWorkflowRibbon } from './components/UnifiedWorkflowRibbon';
+
+// Lazy load all modules using dynamic imports to keep initial bundle size optimized
+const MetastasisAtlasBrowser = lazy(() => import('./components/modules/MetastasisAtlasBrowser').then(m => ({ default: m.MetastasisAtlasBrowser })));
+const LivingMetastasisCinema = lazy(() => import('./components/modules/LivingMetastasisCinema').then(m => ({ default: m.LivingMetastasisCinema })));
+const CascadeTwinSimulator = lazy(() => import('./components/modules/CascadeTwinSimulator').then(m => ({ default: m.CascadeTwinSimulator })));
+const MetastasisForecastEngine = lazy(() => import('./components/modules/MetastasisForecastEngine').then(m => ({ default: m.MetastasisForecastEngine })));
+const CausalMetastasisOracle = lazy(() => import('./components/modules/CausalMetastasisOracle').then(m => ({ default: m.CausalMetastasisOracle })));
+const ResistanceForgeModule = lazy(() => import('./components/modules/ResistanceForgeModule').then(m => ({ default: m.ResistanceForgeModule })));
+const OntologyKnowledgeGraphModule = lazy(() => import('./components/modules/OntologyKnowledgeGraphModule').then(m => ({ default: m.OntologyKnowledgeGraphModule })));
+const BottleneckResolverModule = lazy(() => import('./components/modules/BottleneckResolverModule').then(m => ({ default: m.BottleneckResolverModule })));
+const PrimaryMetPairExplorer = lazy(() => import('./components/modules/PrimaryMetPairExplorer').then(m => ({ default: m.PrimaryMetPairExplorer })));
+const SingleCellStateNavigator = lazy(() => import('./components/modules/SingleCellStateNavigator').then(m => ({ default: m.SingleCellStateNavigator })));
+const PathwayNetworkModule = lazy(() => import('./components/modules/PathwayNetworkModule').then(m => ({ default: m.PathwayNetworkModule })));
+const LongitudinalTrajectoryTracker = lazy(() => import('./components/modules/LongitudinalTrajectoryTracker').then(m => ({ default: m.LongitudinalTrajectoryTracker })));
+const ClinicalOutcomeVisualization = lazy(() => import('./components/modules/ClinicalOutcomeVisualization').then(m => ({ default: m.ClinicalOutcomeVisualization })));
+const MultidimensionalRouteMap = lazy(() => import('./components/modules/MultidimensionalRouteMap').then(m => ({ default: m.MultidimensionalRouteMap })));
+const MultiOmicMatrixHeatmap = lazy(() => import('./components/modules/MultiOmicMatrixHeatmap').then(m => ({ default: m.MultiOmicMatrixHeatmap })));
+const WorkflowEngine = lazy(() => import('./components/modules/WorkflowEngine').then(m => ({ default: m.WorkflowEngine })));
+const GeminiMetastasisAssistant = lazy(() => import('./components/modules/GeminiMetastasisAssistant').then(m => ({ default: m.GeminiMetastasisAssistant })));
+const ClinicalProactiveInterceptionModule = lazy(() => import('./components/modules/ClinicalProactiveInterceptionModule').then(m => ({ default: m.ClinicalProactiveInterceptionModule })));
+const ClinicalDataIngestionHub = lazy(() => import('./components/modules/ClinicalDataIngestionHub').then(m => ({ default: m.ClinicalDataIngestionHub })));
+const ModelValidationBacktestingSuite = lazy(() => import('./components/modules/ModelValidationBacktestingSuite').then(m => ({ default: m.ModelValidationBacktestingSuite })));
+const MetastasisHpcComputeViewer = lazy(() => import('./components/modules/MetastasisHpcComputeViewer').then(m => ({ default: m.MetastasisHpcComputeViewer })));
+const MetastasisSimulationPipelineModule = lazy(() => import('./components/modules/MetastasisSimulationPipelineModule').then(m => ({ default: m.MetastasisSimulationPipelineModule })));
+const CirculatorySimulatorModule = lazy(() => import('./components/modules/CirculatorySimulatorModule').then(m => ({ default: m.CirculatorySimulatorModule })));
+const TumorEvolutionMathEngineModule = lazy(() => import('./components/modules/TumorEvolutionMathEngineModule').then(m => ({ default: m.TumorEvolutionMathEngineModule })));
+const OrganColonizationSandboxModule = lazy(() => import('./components/modules/OrganColonizationSandboxModule').then(m => ({ default: m.OrganColonizationSandboxModule })));
+const ImmuneInteractionGridModule = lazy(() => import('./components/modules/ImmuneInteractionGridModule').then(m => ({ default: m.ImmuneInteractionGridModule })));
+
+const LazyModuleLoader = () => (
+  <div className="flex flex-col items-center justify-center p-24 bg-slate-900/40 border border-slate-800 rounded-2xl space-y-4">
+    <div className="w-10 h-10 border-4 border-cyan-500/20 border-t-cyan-400 rounded-full animate-spin"></div>
+    <div className="text-center">
+      <p className="text-xs font-mono font-bold text-cyan-300 tracking-widest uppercase">Initializing Module Sandbox...</p>
+      <p className="text-[10px] text-slate-500 mt-1">Assembling biophysical grids & multiscale systems</p>
+    </div>
+  </div>
+);
 
 import {
   MetMapCellLine,
@@ -137,224 +147,227 @@ export default function App() {
         />
 
         {/* Dynamic Module Views */}
-        {activeModule === 'hpc_compute' && (
-          <MetastasisHpcComputeViewer
-            selectedOrgan={selectedOrgan}
-            selectedCancerType={selectedCancerType}
-            onNavigateModule={(modId, organ) => {
-              setActiveModule(modId);
-              if (organ && organ !== 'all') setSelectedOrgan(organ as OrganSite);
-            }}
-          />
-        )}
+        {/* Dynamic Module Views wrapped in Suspense for lazy code-splitting */}
+        <Suspense fallback={<LazyModuleLoader />}>
+          {activeModule === 'hpc_compute' && (
+            <MetastasisHpcComputeViewer
+              selectedOrgan={selectedOrgan}
+              selectedCancerType={selectedCancerType}
+              onNavigateModule={(modId, organ) => {
+                setActiveModule(modId);
+                if (organ && organ !== 'all') setSelectedOrgan(organ as OrganSite);
+              }}
+            />
+          )}
 
-        {activeModule === 'immune_grid' && (
-          <ImmuneInteractionGridModule />
-        )}
+          {activeModule === 'immune_grid' && (
+            <ImmuneInteractionGridModule />
+          )}
 
-        {activeModule === 'colonization_sandbox' && (
-          <OrganColonizationSandboxModule
-            selectedOrgan={selectedOrgan}
-            selectedCancerType={selectedCancerType}
-            onNavigateModule={(modId, organ) => {
-              setActiveModule(modId);
-              if (organ && organ !== 'all') setSelectedOrgan(organ as OrganSite);
-            }}
-          />
-        )}
+          {activeModule === 'colonization_sandbox' && (
+            <OrganColonizationSandboxModule
+              selectedOrgan={selectedOrgan}
+              selectedCancerType={selectedCancerType}
+              onNavigateModule={(modId, organ) => {
+                setActiveModule(modId);
+                if (organ && organ !== 'all') setSelectedOrgan(organ as OrganSite);
+              }}
+            />
+          )}
 
-        {activeModule === 'clinical_ingestion' && (
-          <ClinicalDataIngestionHub
-            onAssimilateToTwin={() => {
-              setActiveModule('model_validation');
-            }}
-            onNavigateToModule={(modId) => setActiveModule(modId)}
-          />
-        )}
+          {activeModule === 'clinical_ingestion' && (
+            <ClinicalDataIngestionHub
+              onAssimilateToTwin={() => {
+                setActiveModule('model_validation');
+              }}
+              onNavigateToModule={(modId) => setActiveModule(modId)}
+            />
+          )}
 
-        {activeModule === 'proactive_interception' && (
-          <ClinicalProactiveInterceptionModule
-            selectedOrgan={selectedOrgan}
-            selectedCancerType={selectedCancerType}
-            onNavigateModule={(modId, organ) => {
-              setActiveModule(modId);
-              if (organ && organ !== 'all') setSelectedOrgan(organ as OrganSite);
-            }}
-          />
-        )}
+          {activeModule === 'proactive_interception' && (
+            <ClinicalProactiveInterceptionModule
+              selectedOrgan={selectedOrgan}
+              selectedCancerType={selectedCancerType}
+              onNavigateModule={(modId, organ) => {
+                setActiveModule(modId);
+                if (organ && organ !== 'all') setSelectedOrgan(organ as OrganSite);
+              }}
+            />
+          )}
 
-        {activeModule === 'model_validation' && (
-          <ModelValidationBacktestingSuite
-            selectedOrgan={selectedOrgan}
-            selectedCancerType={selectedCancerType}
-            onNavigateModule={(modId, organ) => {
-              setActiveModule(modId);
-              if (organ && organ !== 'all') setSelectedOrgan(organ as OrganSite);
-            }}
-          />
-        )}
+          {activeModule === 'model_validation' && (
+            <ModelValidationBacktestingSuite
+              selectedOrgan={selectedOrgan}
+              selectedCancerType={selectedCancerType}
+              onNavigateModule={(modId, organ) => {
+                setActiveModule(modId);
+                if (organ && organ !== 'all') setSelectedOrgan(organ as OrganSite);
+              }}
+            />
+          )}
 
-        {activeModule === 'sim_pipeline' && (
-          <MetastasisSimulationPipelineModule
-            selectedOrgan={selectedOrgan}
-            selectedCancerType={selectedCancerType}
-            onNavigateModule={(modId, organ) => {
-              setActiveModule(modId);
-              if (organ && organ !== 'all') setSelectedOrgan(organ as OrganSite);
-            }}
-          />
-        )}
+          {activeModule === 'sim_pipeline' && (
+            <MetastasisSimulationPipelineModule
+              selectedOrgan={selectedOrgan}
+              selectedCancerType={selectedCancerType}
+              onNavigateModule={(modId, organ) => {
+                setActiveModule(modId);
+                if (organ && organ !== 'all') setSelectedOrgan(organ as OrganSite);
+              }}
+            />
+          )}
 
-        {activeModule === 'circulatory_sim' && (
-          <CirculatorySimulatorModule
-            selectedOrgan={selectedOrgan}
-            selectedCancerType={selectedCancerType}
-            onNavigateModule={(modId, organ) => {
-              setActiveModule(modId);
-              if (organ && organ !== 'all') setSelectedOrgan(organ as OrganSite);
-            }}
-          />
-        )}
+          {activeModule === 'circulatory_sim' && (
+            <CirculatorySimulatorModule
+              selectedOrgan={selectedOrgan}
+              selectedCancerType={selectedCancerType}
+              onNavigateModule={(modId, organ) => {
+                setActiveModule(modId);
+                if (organ && organ !== 'all') setSelectedOrgan(organ as OrganSite);
+              }}
+            />
+          )}
 
-        {activeModule === 'tumor_evolution_math' && (
-          <TumorEvolutionMathEngineModule
-            selectedOrgan={selectedOrgan}
-            selectedCancerType={selectedCancerType}
-            onNavigateModule={(modId, organ) => {
-              setActiveModule(modId);
-              if (organ && organ !== 'all') setSelectedOrgan(organ as OrganSite);
-            }}
-          />
-        )}
+          {activeModule === 'tumor_evolution_math' && (
+            <TumorEvolutionMathEngineModule
+              selectedOrgan={selectedOrgan}
+              selectedCancerType={selectedCancerType}
+              onNavigateModule={(modId, organ) => {
+                setActiveModule(modId);
+                if (organ && organ !== 'all') setSelectedOrgan(organ as OrganSite);
+              }}
+            />
+          )}
 
-        {activeModule === 'atlas' && (
-          <MetastasisAtlasBrowser
-            cellLines={cellLines}
-            selectedOrgan={selectedOrgan}
-            setSelectedOrgan={setSelectedOrgan}
-            selectedCancerType={selectedCancerType}
-          />
-        )}
+          {activeModule === 'atlas' && (
+            <MetastasisAtlasBrowser
+              cellLines={cellLines}
+              selectedOrgan={selectedOrgan}
+              setSelectedOrgan={setSelectedOrgan}
+              selectedCancerType={selectedCancerType}
+            />
+          )}
 
-        {activeModule === 'living_cinema' && (
-          <LivingMetastasisCinema
-            selectedOrgan={selectedOrgan}
-            selectedCancerType={selectedCancerType}
-          />
-        )}
+          {activeModule === 'living_cinema' && (
+            <LivingMetastasisCinema
+              selectedOrgan={selectedOrgan}
+              selectedCancerType={selectedCancerType}
+            />
+          )}
 
-        {activeModule === 'cascade_twin' && (
-          <CascadeTwinSimulator
-            selectedOrgan={selectedOrgan}
-            selectedCancerType={selectedCancerType}
-          />
-        )}
+          {activeModule === 'cascade_twin' && (
+            <CascadeTwinSimulator
+              selectedOrgan={selectedOrgan}
+              selectedCancerType={selectedCancerType}
+            />
+          )}
 
-        {activeModule === 'forecast_engine' && (
-          <MetastasisForecastEngine
-            selectedOrgan={selectedOrgan}
-            selectedCancerType={selectedCancerType}
-            onNavigateModule={(modId, organ) => {
-              setActiveModule(modId);
-              if (organ && organ !== 'all') setSelectedOrgan(organ as OrganSite);
-            }}
-          />
-        )}
+          {activeModule === 'forecast_engine' && (
+            <MetastasisForecastEngine
+              selectedOrgan={selectedOrgan}
+              selectedCancerType={selectedCancerType}
+              onNavigateModule={(modId, organ) => {
+                setActiveModule(modId);
+                if (organ && organ !== 'all') setSelectedOrgan(organ as OrganSite);
+              }}
+            />
+          )}
 
-        {activeModule === 'causal_oracle' && (
-          <CausalMetastasisOracle
-            selectedOrgan={selectedOrgan}
-            selectedCancerType={selectedCancerType}
-          />
-        )}
+          {activeModule === 'causal_oracle' && (
+            <CausalMetastasisOracle
+              selectedOrgan={selectedOrgan}
+              selectedCancerType={selectedCancerType}
+            />
+          )}
 
-        {activeModule === 'resistance_forge' && (
-          <ResistanceForgeModule
-            selectedOrgan={selectedOrgan}
-            selectedCancerType={selectedCancerType}
-          />
-        )}
+          {activeModule === 'resistance_forge' && (
+            <ResistanceForgeModule
+              selectedOrgan={selectedOrgan}
+              selectedCancerType={selectedCancerType}
+            />
+          )}
 
-        {activeModule === 'ontology' && (
-          <OntologyKnowledgeGraphModule
-            selectedOrgan={selectedOrgan}
-            selectedCancerType={selectedCancerType}
-          />
-        )}
+          {activeModule === 'ontology' && (
+            <OntologyKnowledgeGraphModule
+              selectedOrgan={selectedOrgan}
+              selectedCancerType={selectedCancerType}
+            />
+          )}
 
-        {activeModule === 'bottleneck' && (
-          <BottleneckResolverModule
-            selectedOrgan={selectedOrgan}
-            selectedCancerType={selectedCancerType}
-          />
-        )}
-
-
-        {activeModule === 'pairs' && (
-          <PrimaryMetPairExplorer
-            pairs={pairs}
-            selectedOrgan={selectedOrgan}
-            selectedCancerType={selectedCancerType}
-          />
-        )}
+          {activeModule === 'bottleneck' && (
+            <BottleneckResolverModule
+              selectedOrgan={selectedOrgan}
+              selectedCancerType={selectedCancerType}
+            />
+          )}
 
 
-        {activeModule === 'single_cell' && (
-          <SingleCellStateNavigator
-            singleCellPoints={singleCellPoints}
-            selectedOrgan={selectedOrgan}
-            selectedCancerType={selectedCancerType}
-          />
-        )}
+          {activeModule === 'pairs' && (
+            <PrimaryMetPairExplorer
+              pairs={pairs}
+              selectedOrgan={selectedOrgan}
+              selectedCancerType={selectedCancerType}
+            />
+          )}
 
-        {activeModule === 'network' && (
-          <PathwayNetworkModule
-            nodes={networkNodes}
-            edges={networkEdges}
-            selectedOrgan={selectedOrgan}
-          />
-        )}
 
-        {activeModule === 'trajectory' && (
-          <LongitudinalTrajectoryTracker
-            clones={lineageClones}
-            selectedOrgan={selectedOrgan}
-          />
-        )}
+          {activeModule === 'single_cell' && (
+            <SingleCellStateNavigator
+              singleCellPoints={singleCellPoints}
+              selectedOrgan={selectedOrgan}
+              selectedCancerType={selectedCancerType}
+            />
+          )}
 
-        {activeModule === 'clinical' && (
-          <ClinicalOutcomeVisualization
-            cohorts={survivalCohorts}
-            selectedOrgan={selectedOrgan}
-          />
-        )}
+          {activeModule === 'network' && (
+            <PathwayNetworkModule
+              nodes={networkNodes}
+              edges={networkEdges}
+              selectedOrgan={selectedOrgan}
+            />
+          )}
 
-        {activeModule === 'routes' && (
-          <MultidimensionalRouteMap
-            routes={disseminationRoutes}
-            selectedOrgan={selectedOrgan}
-            selectedCancerType={selectedCancerType}
-          />
-        )}
+          {activeModule === 'trajectory' && (
+            <LongitudinalTrajectoryTracker
+              clones={lineageClones}
+              selectedOrgan={selectedOrgan}
+            />
+          )}
 
-        {activeModule === 'matrix' && (
-          <MultiOmicMatrixHeatmap
-            selectedOrgan={selectedOrgan}
-          />
-        )}
+          {activeModule === 'clinical' && (
+            <ClinicalOutcomeVisualization
+              cohorts={survivalCohorts}
+              selectedOrgan={selectedOrgan}
+            />
+          )}
 
-        {activeModule === 'workflow' && (
-          <WorkflowEngine
-            pipelines={pipelines}
-          />
-        )}
+          {activeModule === 'routes' && (
+            <MultidimensionalRouteMap
+              routes={disseminationRoutes}
+              selectedOrgan={selectedOrgan}
+              selectedCancerType={selectedCancerType}
+            />
+          )}
 
-        {activeModule === 'ai_assistant' && (
-          <GeminiMetastasisAssistant
-            selectedOrgan={selectedOrgan}
-            selectedCancerType={selectedCancerType}
-          />
-        )}
+          {activeModule === 'matrix' && (
+            <MultiOmicMatrixHeatmap
+              selectedOrgan={selectedOrgan}
+            />
+          )}
+
+          {activeModule === 'workflow' && (
+            <WorkflowEngine
+              pipelines={pipelines}
+            />
+          )}
+
+          {activeModule === 'ai_assistant' && (
+            <GeminiMetastasisAssistant
+              selectedOrgan={selectedOrgan}
+              selectedCancerType={selectedCancerType}
+            />
+          )}
+        </Suspense>
       </main>
 
       {/* Footer */}
