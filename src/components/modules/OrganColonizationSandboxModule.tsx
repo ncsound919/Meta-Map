@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, lazy, Suspense } from 'react';
 import {
   Bone,
   Brain,
@@ -10,12 +10,13 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { OrganSite, PrimaryCancerType } from '../../types/metastasis';
-import { BoneNicheEngine } from './colonization/BoneNicheEngine';
-import { BrainNicheEngine } from './colonization/BrainNicheEngine';
-import { LiverNicheEngine } from './colonization/LiverNicheEngine';
-import { LungNicheEngine } from './colonization/LungNicheEngine';
-import { LiveNicheCanvas } from './colonization/LiveNicheCanvas';
-import { OrganotropismMatrixViewer } from './colonization/OrganotropismMatrixViewer';
+
+const BoneNicheEngine = lazy(() => import('./colonization/BoneNicheEngine').then(m => ({ default: m.BoneNicheEngine })));
+const BrainNicheEngine = lazy(() => import('./colonization/BrainNicheEngine').then(m => ({ default: m.BrainNicheEngine })));
+const LiverNicheEngine = lazy(() => import('./colonization/LiverNicheEngine').then(m => ({ default: m.LiverNicheEngine })));
+const LungNicheEngine = lazy(() => import('./colonization/LungNicheEngine').then(m => ({ default: m.LungNicheEngine })));
+const LiveNicheCanvas = lazy(() => import('./colonization/LiveNicheCanvas').then(m => ({ default: m.LiveNicheCanvas })));
+const OrganotropismMatrixViewer = lazy(() => import('./colonization/OrganotropismMatrixViewer').then(m => ({ default: m.OrganotropismMatrixViewer })));
 
 type SandboxTabId = 'bone' | 'brain' | 'liver' | 'lung' | 'canvas' | 'tropism_matrix';
 
@@ -236,25 +237,32 @@ export const OrganColonizationSandboxModule: React.FC<OrganColonizationSandboxMo
         tabIndex={0}
         className="outline-none"
       >
-        {activeTab === 'bone' && <BoneNicheEngine />}
-        {activeTab === 'brain' && <BrainNicheEngine />}
-        {activeTab === 'liver' && <LiverNicheEngine />}
-        {activeTab === 'lung' && <LungNicheEngine />}
-        {activeTab === 'canvas' && (
-          <LiveNicheCanvas
-            selectedOrgan={currentOrgan}
-          />
-        )}
-        {activeTab === 'tropism_matrix' && (
-          <OrganotropismMatrixViewer
-            selectedOrgan={currentOrgan}
-            onSelectOrgan={(organ) => {
-              setCurrentOrgan(organ);
-              setActiveTab(organ as SandboxTabId);
-            }}
-            selectedCancerType={selectedCancerType}
-          />
-        )}
+        <Suspense fallback={
+          <div className="flex flex-col items-center justify-center p-12 bg-slate-900/40 border border-slate-800 rounded-2xl space-y-3">
+            <div className="w-6 h-6 border-2 border-emerald-500/20 border-t-emerald-400 rounded-full animate-spin"></div>
+            <p className="text-[10px] font-mono font-bold text-emerald-300 tracking-wider uppercase">Loading Niche Sandbox...</p>
+          </div>
+        }>
+          {activeTab === 'bone' && <BoneNicheEngine />}
+          {activeTab === 'brain' && <BrainNicheEngine />}
+          {activeTab === 'liver' && <LiverNicheEngine />}
+          {activeTab === 'lung' && <LungNicheEngine />}
+          {activeTab === 'canvas' && (
+            <LiveNicheCanvas
+              selectedOrgan={currentOrgan}
+            />
+          )}
+          {activeTab === 'tropism_matrix' && (
+            <OrganotropismMatrixViewer
+              selectedOrgan={currentOrgan}
+              onSelectOrgan={(organ) => {
+                setCurrentOrgan(organ);
+                setActiveTab(organ as SandboxTabId);
+              }}
+              selectedCancerType={selectedCancerType}
+            />
+          )}
+        </Suspense>
       </div>
     </div>
   );

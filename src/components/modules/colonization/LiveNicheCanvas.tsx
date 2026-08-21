@@ -37,10 +37,11 @@ export const LiveNicheCanvas: React.FC<LiveNicheCanvasProps> = ({
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [isRunning, setIsRunning] = useState<boolean>(true);
-  const [cells, setCells] = useState<CellAgent[]>([]);
+  const cellsRef = useRef<CellAgent[]>([]);
   const [therapyActive, setTherapyActive] = useState<boolean>(false);
   const [inflammationFlare, setInflammationFlare] = useState<boolean>(false);
   const [stats, setStats] = useState({ dormant: 12, active: 3, stroma: 24, ecmStiffness: 5.2 });
+  const lastStatsUpdateTimeRef = useRef<number>(0);
 
   const interventionRef = useRef({ therapyActive, inflammationFlare });
 
@@ -120,7 +121,7 @@ export const LiveNicheCanvas: React.FC<LiveNicheCanvasProps> = ({
       });
     }
 
-    setCells(initialCells);
+    cellsRef.current = initialCells;
   }, [selectedOrgan]);
 
   // Main Canvas Animation Loop
@@ -164,94 +165,95 @@ export const LiveNicheCanvas: React.FC<LiveNicheCanvasProps> = ({
         ctx.font = '10px monospace';
         ctx.fillText('ENDOTHELIAL EXTRAVASATION INTERFACE / VASCULAR LUMEN', 20, 36);
 
-        // Update and Render Cells
-        setCells((prevCells) => {
-          let dormantCount = 0;
-          let activeCount = 0;
-          let stromaCount = 0;
+        // Update and Render Cells in cellsRef
+        let dormantCount = 0;
+        let activeCount = 0;
+        let stromaCount = 0;
 
-          const updated = prevCells.map((cell) => {
-            let nextX = cell.x + cell.vx;
-            let nextY = cell.y + cell.vy;
-            let nextType = cell.type;
-            let nextState = cell.state;
-            let nextRadius = cell.radius;
+        cellsRef.current.forEach((cell) => {
+          let nextX = cell.x + cell.vx;
+          let nextY = cell.y + cell.vy;
+          let nextType = cell.type;
+          let nextState = cell.state;
+          let nextRadius = cell.radius;
 
-            // Boundary collision
-            if (nextX < 15 || nextX > canvas.width - 15) cell.vx *= -1;
-            if (nextY < 65 || nextY > canvas.height - 15) cell.vy *= -1;
+          // Boundary collision
+          if (nextX < 15 || nextX > canvas.width - 15) cell.vx *= -1;
+          if (nextY < 65 || nextY > canvas.height - 15) cell.vy *= -1;
 
-            // Inflammation trigger: dormant cells awaken
-            if (interventionRef.current.inflammationFlare && cell.type === 'dormant_dtc' && Math.random() < 0.008) {
-              nextType = 'active_met';
-              nextState = 'Awakened (Inflammation Flare)';
-              nextRadius = 9;
-            }
+          // Inflammation trigger: dormant cells awaken
+          if (interventionRef.current.inflammationFlare && cell.type === 'dormant_dtc' && Math.random() < 0.008) {
+            nextType = 'active_met';
+            nextState = 'Awakened (Inflammation Flare)';
+            nextRadius = 9;
+          }
 
-            // Therapy trigger: active metastases arrested or cleared
-            if (interventionRef.current.therapyActive && cell.type === 'active_met' && Math.random() < 0.012) {
-              nextType = 'dormant_dtc';
-              nextState = 'Arrested by Interception Rx';
-              nextRadius = 6;
-            }
+          // Therapy trigger: active metastases arrested or cleared
+          if (interventionRef.current.therapyActive && cell.type === 'active_met' && Math.random() < 0.012) {
+            nextType = 'dormant_dtc';
+            nextState = 'Arrested by Interception Rx';
+            nextRadius = 6;
+          }
 
-            if (nextType === 'dormant_dtc') dormantCount++;
-            if (nextType === 'active_met') activeCount++;
-            if (nextType === 'stroma') stromaCount++;
+          if (nextType === 'dormant_dtc') dormantCount++;
+          if (nextType === 'active_met') activeCount++;
+          if (nextType === 'stroma') stromaCount++;
 
-            // Draw Cell
-            ctx.save();
-            ctx.beginPath();
-            ctx.arc(nextX, nextY, nextRadius, 0, Math.PI * 2);
+          // Draw Cell
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(nextX, nextY, nextRadius, 0, Math.PI * 2);
 
-            if (nextType === 'dormant_dtc') {
-              ctx.fillStyle = '#38bdf8';
-              ctx.shadowColor = '#38bdf8';
-              ctx.shadowBlur = 10;
-              ctx.fill();
+          if (nextType === 'dormant_dtc') {
+            ctx.fillStyle = '#38bdf8';
+            ctx.shadowColor = '#38bdf8';
+            ctx.shadowBlur = 10;
+            ctx.fill();
 
-              // Halo
-              ctx.strokeStyle = 'rgba(56, 189, 248, 0.5)';
-              ctx.stroke();
-            } else if (nextType === 'active_met') {
-              ctx.fillStyle = '#f43f5e';
-              ctx.shadowColor = '#f43f5e';
-              ctx.shadowBlur = 15;
-              ctx.fill();
+            // Halo
+            ctx.strokeStyle = 'rgba(56, 189, 248, 0.5)';
+            ctx.stroke();
+          } else if (nextType === 'active_met') {
+            ctx.fillStyle = '#f43f5e';
+            ctx.shadowColor = '#f43f5e';
+            ctx.shadowBlur = 15;
+            ctx.fill();
 
-              // Pulsing halo
-              ctx.strokeStyle = 'rgba(244, 63, 94, 0.8)';
-              ctx.lineWidth = 2;
-              ctx.stroke();
-            } else if (nextType === 'stroma') {
-              ctx.fillStyle = selectedOrgan === 'bone' ? '#f59e0b' :
-                              selectedOrgan === 'brain' ? '#818cf8' :
-                              selectedOrgan === 'liver' ? '#10b981' :
-                              '#a855f7';
-              ctx.shadowColor = ctx.fillStyle;
-              ctx.shadowBlur = 4;
-              ctx.fill();
-            } else if (nextType === 'vessel') {
-              ctx.fillStyle = '#ef4444';
-              ctx.fill();
-            }
+            // Pulsing halo
+            ctx.strokeStyle = 'rgba(244, 63, 94, 0.8)';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+          } else if (nextType === 'stroma') {
+            ctx.fillStyle = selectedOrgan === 'bone' ? '#f59e0b' :
+                            selectedOrgan === 'brain' ? '#818cf8' :
+                            selectedOrgan === 'liver' ? '#10b981' :
+                            '#a855f7';
+            ctx.shadowColor = ctx.fillStyle;
+            ctx.shadowBlur = 4;
+            ctx.fill();
+          } else if (nextType === 'vessel') {
+            ctx.fillStyle = '#ef4444';
+            ctx.fill();
+          }
 
-            ctx.restore();
+          ctx.restore();
 
-            return {
-              ...cell,
-              x: Math.max(15, Math.min(canvas.width - 15, nextX)),
-              y: Math.max(65, Math.min(canvas.height - 15, nextY)),
-              type: nextType,
-              state: nextState,
-              radius: nextRadius
-            };
-          });
+          // Mutate properties
+          cell.x = Math.max(15, Math.min(canvas.width - 15, nextX));
+          cell.y = Math.max(65, Math.min(canvas.height - 15, nextY));
+          cell.type = nextType;
+          cell.state = nextState;
+          cell.radius = nextRadius;
+        });
 
-          const currentStiffness = selectedOrgan === 'bone' ? 150 :
-                                  selectedOrgan === 'brain' ? 0.6 :
-                                  selectedOrgan === 'liver' ? 6.5 : 3.8;
+        const currentStiffness = selectedOrgan === 'bone' ? 150 :
+                                selectedOrgan === 'brain' ? 0.6 :
+                                selectedOrgan === 'liver' ? 6.5 : 3.8;
 
+        // Rate-limit state and parent callback updates to 3.3Hz
+        const now = Date.now();
+        if (now - lastStatsUpdateTimeRef.current > 300) {
+          lastStatsUpdateTimeRef.current = now;
           setStats({
             dormant: dormantCount,
             active: activeCount,
@@ -267,9 +269,7 @@ export const LiveNicheCanvas: React.FC<LiveNicheCanvasProps> = ({
               ecmStiffness: currentStiffness
             });
           }
-
-          return updated;
-        });
+        }
       }
 
       animationFrameId = requestAnimationFrame(render);
@@ -283,28 +283,24 @@ export const LiveNicheCanvas: React.FC<LiveNicheCanvasProps> = ({
   }, [isRunning, selectedOrgan]); // Removed therapyActive and inflammationFlare
 
   const handleAddDtc = () => {
-    setCells((prev) => [
-      ...prev,
-      {
-        id: `dtc-${Date.now()}-${Math.random()}`,
-        x: Math.random() * 500 + 100,
-        y: Math.random() * 200 + 80,
-        vx: (Math.random() - 0.5) * 0.2,
-        vy: (Math.random() - 0.5) * 0.2,
-        radius: 6,
-        type: 'dormant_dtc',
-        energy: 80,
-        age: 0,
-        state: 'Extravasated DTC'
-      }
-    ]);
+    cellsRef.current.push({
+      id: `dtc-${Date.now()}-${Math.random()}`,
+      x: Math.random() * 500 + 100,
+      y: Math.random() * 200 + 80,
+      vx: (Math.random() - 0.5) * 0.2,
+      vy: (Math.random() - 0.5) * 0.2,
+      radius: 6,
+      type: 'dormant_dtc',
+      energy: 80,
+      age: 0,
+      state: 'Extravasated DTC'
+    });
   };
 
   const handleResetCanvas = () => {
     setTherapyActive(false);
     setInflammationFlare(false);
-    // trigger re-init
-    setCells((prev) => prev.filter(c => c.type === 'vessel' || c.type === 'stroma'));
+    cellsRef.current = cellsRef.current.filter(c => c.type === 'vessel' || c.type === 'stroma');
     for (let i = 0; i < 8; i++) {
       handleAddDtc();
     }

@@ -84,6 +84,7 @@ export const ModelValidationBacktestingSuite: React.FC<ModelValidationBacktestin
   const [gillespieShearStress, setGillespieShearStress] = useState<number>(22.0);
   const [gillespieNkActivity, setGillespieNkActivity] = useState<number>(80.0);
   const [gillespieInitialCluster, setGillespieInitialCluster] = useState<number>(3);
+  const [gillespieScimetMode, setGillespieScimetMode] = useState<'monoclonal' | 'polyclonal'>('polyclonal');
 
   const runWorkerJob = async () => {
     setIsWorkerRunning(true);
@@ -100,7 +101,8 @@ export const ModelValidationBacktestingSuite: React.FC<ModelValidationBacktestin
           hours: gillespieHours,
           shearStress: gillespieShearStress,
           nkActivity: gillespieNkActivity,
-          initialClusterSize: gillespieInitialCluster
+          initialClusterSize: gillespieInitialCluster,
+          scimetMode: gillespieScimetMode
         };
       } else if (workerJobType === 'RK45_PARAMETER_SWEEP') {
         payload = { iterations: 2400 };
@@ -725,6 +727,33 @@ export const ModelValidationBacktestingSuite: React.FC<ModelValidationBacktestin
                     onChange={setGillespieNkActivity}
                     valueDisplay={<>{gillespieNkActivity.toFixed(0)}%</>}
                   />
+
+                  {/* SCIMET Evolutionary Mode Selector */}
+                  <div className="space-y-1.5 pt-1">
+                    <span className="text-[10px] text-slate-400 font-mono block">SCIMET Dissemination Mode:</span>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        onClick={() => setGillespieScimetMode('monoclonal')}
+                        className={`py-1.5 px-2 rounded-lg border text-[10px] font-mono transition-all text-center ${
+                          gillespieScimetMode === 'monoclonal'
+                            ? 'bg-amber-500/10 border-amber-500/50 text-amber-300 font-bold'
+                            : 'bg-slate-950 border-slate-800 text-slate-500 hover:text-slate-300'
+                        }`}
+                      >
+                        Monoclonal Selection
+                      </button>
+                      <button
+                        onClick={() => setGillespieScimetMode('polyclonal')}
+                        className={`py-1.5 px-2 rounded-lg border text-[10px] font-mono transition-all text-center ${
+                          gillespieScimetMode === 'polyclonal'
+                            ? 'bg-amber-500/10 border-amber-500/50 text-amber-300 font-bold'
+                            : 'bg-slate-950 border-slate-800 text-slate-500 hover:text-slate-300'
+                        }`}
+                      >
+                        Multiclonal Cooperative
+                      </button>
+                    </div>
+                  </div>
                 </div>
               )}
 

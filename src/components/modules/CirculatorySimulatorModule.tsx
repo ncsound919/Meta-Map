@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, lazy, Suspense } from 'react';
 import {
   Heart,
   Radio,
@@ -16,17 +16,18 @@ import {
   LucideIcon
 } from 'lucide-react';
 import { OrganSite, PrimaryCancerType } from '../../types/metastasis';
-import { Windkessel0DViewer } from './circulatory/Windkessel0DViewer';
-import { WavePropagation1DViewer } from './circulatory/WavePropagation1DViewer';
-import { MultiphysicsCFD3DViewer } from './circulatory/MultiphysicsCFD3DViewer';
-import { BenchtopMockLoopViewer } from './circulatory/BenchtopMockLoopViewer';
-import { CirculatoryMicrodynamicsStage } from './circulatory/CirculatoryMicrodynamicsStage';
-import { OrganVascularBedFiltration } from './circulatory/OrganVascularBedFiltration';
-import { ExtravasationAdhesionKinetics } from './circulatory/ExtravasationAdhesionKinetics';
-import { BifurcationHemodynamicsSimulator } from './circulatory/BifurcationHemodynamicsSimulator';
-import { PlateletImmuneCloakingEngine } from './circulatory/PlateletImmuneCloakingEngine';
-import { WholeBodyMetastaticPerfusionNetwork } from './circulatory/WholeBodyMetastaticPerfusionNetwork';
-import { MicroconstrictionNuclearDeformation } from './circulatory/MicroconstrictionNuclearDeformation';
+
+const Windkessel0DViewer = lazy(() => import('./circulatory/Windkessel0DViewer').then(m => ({ default: m.Windkessel0DViewer })));
+const WavePropagation1DViewer = lazy(() => import('./circulatory/WavePropagation1DViewer').then(m => ({ default: m.WavePropagation1DViewer })));
+const MultiphysicsCFD3DViewer = lazy(() => import('./circulatory/MultiphysicsCFD3DViewer').then(m => ({ default: m.MultiphysicsCFD3DViewer })));
+const BenchtopMockLoopViewer = lazy(() => import('./circulatory/BenchtopMockLoopViewer').then(m => ({ default: m.BenchtopMockLoopViewer })));
+const CirculatoryMicrodynamicsStage = lazy(() => import('./circulatory/CirculatoryMicrodynamicsStage').then(m => ({ default: m.CirculatoryMicrodynamicsStage })));
+const OrganVascularBedFiltration = lazy(() => import('./circulatory/OrganVascularBedFiltration').then(m => ({ default: m.OrganVascularBedFiltration })));
+const ExtravasationAdhesionKinetics = lazy(() => import('./circulatory/ExtravasationAdhesionKinetics').then(m => ({ default: m.ExtravasationAdhesionKinetics })));
+const BifurcationHemodynamicsSimulator = lazy(() => import('./circulatory/BifurcationHemodynamicsSimulator').then(m => ({ default: m.BifurcationHemodynamicsSimulator })));
+const PlateletImmuneCloakingEngine = lazy(() => import('./circulatory/PlateletImmuneCloakingEngine').then(m => ({ default: m.PlateletImmuneCloakingEngine })));
+const WholeBodyMetastaticPerfusionNetwork = lazy(() => import('./circulatory/WholeBodyMetastaticPerfusionNetwork').then(m => ({ default: m.WholeBodyMetastaticPerfusionNetwork })));
+const MicroconstrictionNuclearDeformation = lazy(() => import('./circulatory/MicroconstrictionNuclearDeformation').then(m => ({ default: m.MicroconstrictionNuclearDeformation })));
 
 type SimulatorTabId =
   | 'microdynamics'
@@ -242,37 +243,44 @@ export const CirculatorySimulatorModule: React.FC<CirculatorySimulatorProps> = R
         className="outline-none"
         tabIndex={0}
       >
-        {activeTab === 'microdynamics' && (
-          <CirculatoryMicrodynamicsStage
-            selectedOrgan={selectedOrgan}
-            selectedCancerType={selectedCancerType}
-          />
-        )}
+        <Suspense fallback={
+          <div className="flex flex-col items-center justify-center p-12 bg-slate-900/40 border border-slate-800 rounded-2xl space-y-3">
+            <div className="w-6 h-6 border-2 border-rose-500/20 border-t-rose-400 rounded-full animate-spin"></div>
+            <p className="text-[10px] font-mono font-bold text-rose-300 tracking-wider uppercase">Loading Circulatory Sandbox...</p>
+          </div>
+        }>
+          {activeTab === 'microdynamics' && (
+            <CirculatoryMicrodynamicsStage
+              selectedOrgan={selectedOrgan}
+              selectedCancerType={selectedCancerType}
+            />
+          )}
 
-        {/* 
-          Note: selectedOrgan and selectedCancerType are only forwarded to CirculatoryMicrodynamicsStage.
-          Other modules currently do not accept these props in their interfaces. If they are needed
-          in the future, update the respective module's props interface and pass them here.
-        */}
-        {activeTab === 'platelet_cloaking' && <PlateletImmuneCloakingEngine />}
+          {/* 
+            Note: selectedOrgan and selectedCancerType are only forwarded to CirculatoryMicrodynamicsStage.
+            Other modules currently do not accept these props in their interfaces. If they are needed
+            in the future, update the respective module's props interface and pass them here.
+          */}
+          {activeTab === 'platelet_cloaking' && <PlateletImmuneCloakingEngine />}
 
-        {activeTab === 'whole_body_perfusion' && <WholeBodyMetastaticPerfusionNetwork />}
+          {activeTab === 'whole_body_perfusion' && <WholeBodyMetastaticPerfusionNetwork />}
 
-        {activeTab === 'nuclear_deformation' && <MicroconstrictionNuclearDeformation />}
+          {activeTab === 'nuclear_deformation' && <MicroconstrictionNuclearDeformation />}
 
-        {activeTab === 'organ_beds' && <OrganVascularBedFiltration />}
+          {activeTab === 'organ_beds' && <OrganVascularBedFiltration />}
 
-        {activeTab === 'extravasation' && <ExtravasationAdhesionKinetics />}
+          {activeTab === 'extravasation' && <ExtravasationAdhesionKinetics />}
 
-        {activeTab === 'bifurcation' && <BifurcationHemodynamicsSimulator />}
+          {activeTab === 'bifurcation' && <BifurcationHemodynamicsSimulator />}
 
-        {activeTab === '0d_windkessel' && <Windkessel0DViewer />}
+          {activeTab === '0d_windkessel' && <Windkessel0DViewer />}
 
-        {activeTab === '1d_wave' && <WavePropagation1DViewer />}
+          {activeTab === '1d_wave' && <WavePropagation1DViewer />}
 
-        {activeTab === '3d_cfd' && <MultiphysicsCFD3DViewer />}
+          {activeTab === '3d_cfd' && <MultiphysicsCFD3DViewer />}
 
-        {activeTab === 'benchtop_mcl' && <BenchtopMockLoopViewer />}
+          {activeTab === 'benchtop_mcl' && <BenchtopMockLoopViewer />}
+        </Suspense>
       </div>
 
       {/* Software Engines & Clinical Reference Guide Footnote */}

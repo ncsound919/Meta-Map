@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, lazy, Suspense } from 'react';
 import {
   Shield,
   Activity,
@@ -9,13 +9,14 @@ import {
   BarChart3,
   FlaskConical
 } from 'lucide-react';
-import { ImmuneInteractionMatrix } from './immune/ImmuneInteractionMatrix';
-import { InterventionScenarioSim } from './immune/InterventionScenarioSim';
-import { ImmuneSynapseCanvas } from './immune/ImmuneSynapseCanvas';
-import { SpatialImmuneTopology } from './immune/SpatialImmuneTopology';
-import { ImmuneEscapeMechanisms } from './immune/ImmuneEscapeMechanisms';
-import { SpatialAgentSimulator } from './immune/SpatialAgentSimulator';
-import { ImmuneBiomarkerPredictor } from './immune/ImmuneBiomarkerPredictor';
+
+const ImmuneInteractionMatrix = lazy(() => import('./immune/ImmuneInteractionMatrix').then(m => ({ default: m.ImmuneInteractionMatrix })));
+const InterventionScenarioSim = lazy(() => import('./immune/InterventionScenarioSim').then(m => ({ default: m.InterventionScenarioSim })));
+const ImmuneSynapseCanvas = lazy(() => import('./immune/ImmuneSynapseCanvas').then(m => ({ default: m.ImmuneSynapseCanvas })));
+const SpatialImmuneTopology = lazy(() => import('./immune/SpatialImmuneTopology').then(m => ({ default: m.SpatialImmuneTopology })));
+const ImmuneEscapeMechanisms = lazy(() => import('./immune/ImmuneEscapeMechanisms').then(m => ({ default: m.ImmuneEscapeMechanisms })));
+const SpatialAgentSimulator = lazy(() => import('./immune/SpatialAgentSimulator').then(m => ({ default: m.SpatialAgentSimulator })));
+const ImmuneBiomarkerPredictor = lazy(() => import('./immune/ImmuneBiomarkerPredictor').then(m => ({ default: m.ImmuneBiomarkerPredictor })));
 
 type GridTabId = 'matrix' | 'simulator' | 'agent_sim' | 'synapse' | 'escape' | 'topology' | 'biomarkers';
 
@@ -171,13 +172,20 @@ export const ImmuneInteractionGridModule: React.FC = React.memo(() => {
         tabIndex={0}
         className="outline-none"
       >
-        {activeTab === 'matrix' && <ImmuneInteractionMatrix />}
-        {activeTab === 'simulator' && <InterventionScenarioSim />}
-        {activeTab === 'agent_sim' && <SpatialAgentSimulator />}
-        {activeTab === 'synapse' && <ImmuneSynapseCanvas />}
-        {activeTab === 'escape' && <ImmuneEscapeMechanisms />}
-        {activeTab === 'topology' && <SpatialImmuneTopology />}
-        {activeTab === 'biomarkers' && <ImmuneBiomarkerPredictor />}
+        <Suspense fallback={
+          <div className="flex flex-col items-center justify-center p-12 bg-slate-900/40 border border-slate-800 rounded-2xl space-y-3">
+            <div className="w-6 h-6 border-2 border-cyan-500/20 border-t-cyan-400 rounded-full animate-spin"></div>
+            <p className="text-[10px] font-mono font-bold text-cyan-300 tracking-wider uppercase">Loading Immune Grid...</p>
+          </div>
+        }>
+          {activeTab === 'matrix' && <ImmuneInteractionMatrix />}
+          {activeTab === 'simulator' && <InterventionScenarioSim />}
+          {activeTab === 'agent_sim' && <SpatialAgentSimulator />}
+          {activeTab === 'synapse' && <ImmuneSynapseCanvas />}
+          {activeTab === 'escape' && <ImmuneEscapeMechanisms />}
+          {activeTab === 'topology' && <SpatialImmuneTopology />}
+          {activeTab === 'biomarkers' && <ImmuneBiomarkerPredictor />}
+        </Suspense>
       </div>
     </div>
   );
