@@ -1,6 +1,6 @@
 {
   "name": "MetaMap - Metastasis Multi-Omics & Organotropism Portal",
-  "description": "Unified bioinformatics platform for cancer metastasis, organotropism maps, matched primary-metastasis paired multi-omics, single-cell niche navigation, and therapeutic vulnerability analysis.",
+  "description": "Unified bioinformatics and oncology modeling platform with Extended Kalman Filter digital twin assimilation, biophysical ODE solvers, rigorous MASE/WAPE time-series backtesting, and organotropism intelligence.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

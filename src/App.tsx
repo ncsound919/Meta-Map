@@ -22,6 +22,8 @@ import { WorkflowEngine } from './components/modules/WorkflowEngine';
 import { GeminiMetastasisAssistant } from './components/modules/GeminiMetastasisAssistant';
 import { LabGradeCalibrationModal } from './components/LabGradeCalibrationModal';
 import { ClinicalProactiveInterceptionModule } from './components/modules/ClinicalProactiveInterceptionModule';
+import { ModelValidationBacktestingSuite } from './components/modules/ModelValidationBacktestingSuite';
+import { MetastasisHpcComputeViewer } from './components/modules/MetastasisHpcComputeViewer';
 import { MetastasisSimulationPipelineModule } from './components/modules/MetastasisSimulationPipelineModule';
 import { CirculatorySimulatorModule } from './components/modules/CirculatorySimulatorModule';
 import { TumorEvolutionMathEngineModule } from './components/modules/TumorEvolutionMathEngineModule';
@@ -134,6 +136,17 @@ export default function App() {
         />
 
         {/* Dynamic Module Views */}
+        {activeModule === 'hpc_compute' && (
+          <MetastasisHpcComputeViewer
+            selectedOrgan={selectedOrgan}
+            selectedCancerType={selectedCancerType}
+            onNavigateModule={(modId, organ) => {
+              setActiveModule(modId);
+              if (organ && organ !== 'all') setSelectedOrgan(organ as OrganSite);
+            }}
+          />
+        )}
+
         {activeModule === 'immune_grid' && (
           <ImmuneInteractionGridModule />
         )}
@@ -151,6 +164,17 @@ export default function App() {
 
         {activeModule === 'proactive_interception' && (
           <ClinicalProactiveInterceptionModule
+            selectedOrgan={selectedOrgan}
+            selectedCancerType={selectedCancerType}
+            onNavigateModule={(modId, organ) => {
+              setActiveModule(modId);
+              if (organ && organ !== 'all') setSelectedOrgan(organ as OrganSite);
+            }}
+          />
+        )}
+
+        {activeModule === 'model_validation' && (
+          <ModelValidationBacktestingSuite
             selectedOrgan={selectedOrgan}
             selectedCancerType={selectedCancerType}
             onNavigateModule={(modId, organ) => {

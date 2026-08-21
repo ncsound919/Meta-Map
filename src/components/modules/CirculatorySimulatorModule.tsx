@@ -26,6 +26,9 @@ import { CirculatoryMicrodynamicsStage } from './circulatory/CirculatoryMicrodyn
 import { OrganVascularBedFiltration } from './circulatory/OrganVascularBedFiltration';
 import { ExtravasationAdhesionKinetics } from './circulatory/ExtravasationAdhesionKinetics';
 import { BifurcationHemodynamicsSimulator } from './circulatory/BifurcationHemodynamicsSimulator';
+import { PlateletImmuneCloakingEngine } from './circulatory/PlateletImmuneCloakingEngine';
+import { WholeBodyMetastaticPerfusionNetwork } from './circulatory/WholeBodyMetastaticPerfusionNetwork';
+import { MicroconstrictionNuclearDeformation } from './circulatory/MicroconstrictionNuclearDeformation';
 
 interface CirculatorySimulatorProps {
   selectedOrgan: OrganSite | 'all';
@@ -40,15 +43,21 @@ export const CirculatorySimulatorModule: React.FC<CirculatorySimulatorProps> = (
 }) => {
   // Navigation Tabs for the Core Modeling Frameworks:
   // 1. CTC Microvascular Transport
-  // 2. Organ-Specific Vascular Beds & Steric Filtration
-  // 3. Extravasation & Bell's Catch-Bond Adhesion Kinetics
-  // 4. Microvascular Bifurcation & Skimming Physics
-  // 5. 0D Lumped-Parameter (Windkessel / CVSim / Harvi)
-  // 6. 1D Wave Propagation (Pulse reflection / CARDIOSIM)
-  // 7. 3D Multiphysics CFD & FSI (SimVascular / OpenFOAM / FFR)
-  // 8. Benchtop Mock Circulatory Loops (LVAD / TAH / Valves)
+  // 2. Platelet Cloaking & NK Cytolytic Evasion
+  // 3. Whole-Body Closed-Loop Perfusion Circuit
+  // 4. Nuclear Microconstriction & DNA Damage
+  // 5. Organ-Specific Vascular Beds & Steric Filtration
+  // 6. Extravasation & Bell's Catch-Bond Adhesion Kinetics
+  // 7. Microvascular Bifurcation & Skimming Physics
+  // 8. 0D Lumped-Parameter (Windkessel / CVSim / Harvi)
+  // 9. 1D Wave Propagation (Pulse reflection / CARDIOSIM)
+  // 10. 3D Multiphysics CFD & FSI (SimVascular / OpenFOAM / FFR)
+  // 11. Benchtop Mock Circulatory Loops (LVAD / TAH / Valves)
   const [activeTab, setActiveTab] = useState<
     | 'microdynamics'
+    | 'platelet_cloaking'
+    | 'whole_body_perfusion'
+    | 'nuclear_deformation'
     | 'organ_beds'
     | 'extravasation'
     | 'bifurcation'
@@ -109,6 +118,27 @@ export const CirculatorySimulatorModule: React.FC<CirculatorySimulatorProps> = (
               badgeColor: 'border-rose-500/30 text-rose-300 bg-rose-500/10'
             },
             {
+              id: 'platelet_cloaking',
+              label: 'Platelet Cloaking & NK Evasion',
+              sublabel: 'Thrombus Corona • TGF-β • MHC Mimicry',
+              icon: Shield,
+              badgeColor: 'border-emerald-500/30 text-emerald-300 bg-emerald-500/10'
+            },
+            {
+              id: 'whole_body_perfusion',
+              label: 'Whole-Body Closed-Loop Circuit',
+              sublabel: "Portal Sieve • Batson's Plexus • Multi-Pass",
+              icon: Heart,
+              badgeColor: 'border-cyan-500/30 text-cyan-300 bg-cyan-500/10'
+            },
+            {
+              id: 'nuclear_deformation',
+              label: 'Nuclear Squeeze & DNA Damage',
+              sublabel: 'Kelvin-Voigt • Lamin A/C • cGAS-STING',
+              icon: Zap,
+              badgeColor: 'border-purple-500/30 text-purple-300 bg-purple-500/10'
+            },
+            {
               id: 'organ_beds',
               label: 'Organ Vascular Beds',
               sublabel: 'Steric Sieve • Fenestrations • Pores',
@@ -119,7 +149,7 @@ export const CirculatorySimulatorModule: React.FC<CirculatorySimulatorProps> = (
               id: 'extravasation',
               label: 'Extravasation & Diapedesis',
               sublabel: 'Bell Catch-Bonds • VE-Cadherin • MMP',
-              icon: Zap,
+              icon: Sparkles,
               badgeColor: 'border-amber-500/30 text-amber-300 bg-amber-500/10'
             },
             {
@@ -193,6 +223,12 @@ export const CirculatorySimulatorModule: React.FC<CirculatorySimulatorProps> = (
           selectedCancerType={selectedCancerType}
         />
       )}
+
+      {activeTab === 'platelet_cloaking' && <PlateletImmuneCloakingEngine />}
+
+      {activeTab === 'whole_body_perfusion' && <WholeBodyMetastaticPerfusionNetwork />}
+
+      {activeTab === 'nuclear_deformation' && <MicroconstrictionNuclearDeformation />}
 
       {activeTab === 'organ_beds' && <OrganVascularBedFiltration />}
 

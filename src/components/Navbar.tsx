@@ -21,7 +21,9 @@ import {
   Microscope,
   Stethoscope,
   Heart,
-  Calculator
+  Calculator,
+  FileCheck2,
+  Server
 } from 'lucide-react';
 import { OrganSite, PrimaryCancerType } from '../types/metastasis';
 
@@ -45,7 +47,9 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenLabModal
 }) => {
   const modules = [
+    { id: 'hpc_compute', name: 'HPC Compute Backend', icon: Server },
     { id: 'proactive_interception', name: 'Proactive Interception', icon: Stethoscope },
+    { id: 'model_validation', name: 'Validation & EKF Twin', icon: FileCheck2 },
     { id: 'immune_grid', name: 'Immune Interaction Grid', icon: ShieldAlert },
     { id: 'colonization_sandbox', name: 'Colonization Sandbox', icon: Sparkles },
     { id: 'sim_pipeline', name: 'Simulation Pipeline', icon: Cpu },

@@ -33,7 +33,8 @@ import {
   Zap,
   RotateCcw,
   Eye,
-  SlidersHorizontal
+  SlidersHorizontal,
+  Server
 } from 'lucide-react';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, Legend, BarChart, Bar, AreaChart, Area } from 'recharts';
 import { OrganSite, PrimaryCancerType } from '../../types/metastasis';
@@ -244,6 +245,14 @@ export const MetastasisSimulationPipelineModule: React.FC<MetastasisSimulationPi
               {isRunning ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4 fill-white" />}
               <span>{isRunning ? 'Solvers Running...' : 'Execute Coupled Pipeline'}</span>
             </button>
+            {onNavigateModule && (
+              <button
+                onClick={() => onNavigateModule('hpc_compute', targetOrgan)}
+                className="px-3 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white rounded-lg font-bold flex items-center gap-1.5 transition-all shadow-md border border-purple-400/40"
+              >
+                <Server className="w-3.5 h-3.5" /> HPC Backend Engine
+              </button>
+            )}
             <button
               onClick={() => setShowCodeExportModal(true)}
               className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-cyan-300 rounded-lg font-bold flex items-center gap-1.5 transition-colors border border-slate-700"

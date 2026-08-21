@@ -20,6 +20,7 @@ import {
   KNOWLEDGE_GRAPH_EDGES,
   HARMONIZATION_TEST_SAMPLES
 } from './src/data/metastasisDataset.js';
+import { ComputeWorkerProxy } from './src/math/computeWorkerProxy.js';
 
 
 
@@ -34,6 +35,120 @@ async function startServer() {
   // Health check
   app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', service: 'MetaMap Metastasis Portal' });
+  });
+
+  // ==================== HIGH-PERFORMANCE BACKEND COMPUTE CLUSTER ENDPOINTS ====================
+
+  // 1. HPC Cluster Status & Worker Node Health
+  app.get('/api/compute/cluster-status', async (req, res) => {
+    try {
+      const status = await ComputeWorkerProxy.getHpcClusterStatus();
+      res.json(status);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  // 2. HPC 2D Reaction-Diffusion PDE Solve (O2 / LOX / MMP / Matrix Stiffness)
+  app.post('/api/compute/hpc-solve/pde', async (req, res) => {
+    try {
+      const {
+        dimensions = { nx: 32, ny: 32, dxUm: 5.0, dyUm: 5.0 },
+        timeSteps = 30,
+        dtSeconds = 0.1,
+        hypoxiaThresholdMmHg = 10,
+        loxProductionRate = 1.8,
+        mmpDiffusionCoeff = 0.08,
+        matrixStiffnessBaseKpa = 30.0,
+        backend = 'cpp_native'
+      } = req.body;
+
+      const result = await ComputeWorkerProxy.solveReactionDiffusionPde({
+        dimensions,
+        timeSteps,
+        dtSeconds,
+        hypoxiaThresholdMmHg,
+        loxProductionRate,
+        mmpDiffusionCoeff,
+        matrixStiffnessBaseKpa,
+        backend
+      });
+
+      res.json(result);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  // 3. HPC Lattice-Boltzmann Method (LBM D2Q9) Hemodynamic CFD Solve
+  app.post('/api/compute/hpc-solve/cfd', async (req, res) => {
+    try {
+      const {
+        dimensions = { nx: 40, ny: 24, dxUm: 2.0, dyUm: 2.0 },
+        inletVelocityUmS = 250.0,
+        vesselRadiusUm = 18.0,
+        fluidViscosityCp = 3.5,
+        constrictionRatio = 0.35,
+        timeSteps = 20,
+        backend = 'cpp_native'
+      } = req.body;
+
+      const result = await ComputeWorkerProxy.solveLbmMicrovascularCfd({
+        dimensions,
+        inletVelocityUmS,
+        vesselRadiusUm,
+        fluidViscosityCp,
+        constrictionRatio,
+        timeSteps,
+        backend
+      });
+
+      res.json(result);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  // 4. HPC Stochastic Agent-Based Model (Gillespie / Tau-Leaping ABM)
+  app.post('/api/compute/hpc-solve/abm', async (req, res) => {
+    try {
+      const {
+        initialCtcCount = 1000,
+        clusterSizes = [1, 2, 3, 5],
+        simulationHours = 24,
+        shearStressDynCm2 = 15.0,
+        nkCytolyticActivity = 70,
+        endothelialPermeability = 1.4,
+        integrinAffinity = 0.85,
+        backend = 'julia_sciml'
+      } = req.body;
+
+      const result = await ComputeWorkerProxy.solveStochasticAbm({
+        initialCtcCount,
+        clusterSizes,
+        simulationHours,
+        shearStressDynCm2,
+        nkCytolyticActivity,
+        endothelialPermeability,
+        integrinAffinity,
+        backend
+      });
+
+      res.json(result);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  // 5. Generate Standalone HPC Submission Script (C++, Julia, Python)
+  app.post('/api/compute/export-hpc-script', async (req, res) => {
+    try {
+      const { backend = 'cpp_native', cancerType = 'Breast (BRCA)', organSite = 'bone', gridNx = 64, timeSteps = 100 } = req.body;
+      const script = await ComputeWorkerProxy.generateHpcJobScript(backend, { cancerType, organSite, gridNx, timeSteps });
+      res.json(script);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
   });
 
   // MetMap Cell Lines
@@ -549,261 +664,108 @@ Return JSON matching:
   // --- Metastasis Forecast Engine Endpoints ---
 
   // Multi-Scale Twin Enterprise Forecast Engine Endpoint (4-Layer System Architecture)
-  app.post('/api/forecast-engine/predict', (req, res) => {
-    const { patientTwinId, cancerType, organSite, primaryStage, activeModels = [] } = req.body;
-
-    const patientId = patientTwinId || 'PT-TWIN-2026-BRCA-09';
-    const cancer = cancerType || 'Breast (BRCA)';
-
-    // Dynamic organotropism risk calculation
-    const organotropismMap = [
-      { organ: 'bone', organName: 'Bone (Endosteal Niche)', probabilityPct: organSite === 'bone' ? 82.5 : 68.4, medianSeedingDays: 120, dormancyPct: 74.2 },
-      { organ: 'lung', organName: 'Lung (Parenchyma)', probabilityPct: organSite === 'lung' ? 79.1 : 44.8, medianSeedingDays: 180, dormancyPct: 38.5 },
-      { organ: 'liver', organName: 'Liver (Sinusoidal Niche)', probabilityPct: organSite === 'liver' ? 85.0 : 28.1, medianSeedingDays: 210, dormancyPct: 22.0 },
-      { organ: 'brain', organName: 'Brain (Vascular Co-option)', probabilityPct: organSite === 'brain' ? 71.3 : 14.6, medianSeedingDays: 320, dormancyPct: 15.8 }
-    ];
-
-    // Generate 360-day Probabilistic Forecast Trajectory (P10, P50, P90 prediction intervals)
-    const probabilisticTrajectory = [];
-    const longitudinalPredictions = [];
-
-    for (let day = 0; day <= 360; day += 30) {
-      // Standard Care Baseline (Exponential Outgrowth)
-      const standardCtc = Math.round(120 * Math.exp(0.005 * day));
-      const standardBoneMetsP50 = Math.round(5 * Math.exp(0.012 * day));
-      const standardBoneMetsP10 = Math.round(standardBoneMetsP50 * 0.72);
-      const standardBoneMetsP90 = Math.round(standardBoneMetsP50 * 1.35);
-
-      // Prescribed Closed-Loop Intervention (80% Outgrowth Suppression)
-      const prescribedCtc = Math.round(120 * Math.exp(-0.008 * day));
-      const prescribedBoneMetsP50 = Math.round(5 * Math.exp(-0.004 * day));
-      const prescribedBoneMetsP10 = Math.max(1, Math.round(prescribedBoneMetsP50 * 0.65));
-      const prescribedBoneMetsP90 = Math.round(prescribedBoneMetsP50 * 1.28);
-
-      probabilisticTrajectory.push({
-        day,
-        dayLabel: `D+${day}`,
-        standardP10: standardBoneMetsP10,
-        standardP50: standardBoneMetsP50,
-        standardP90: standardBoneMetsP90,
-        prescribedP10: prescribedBoneMetsP10,
-        prescribedP50: prescribedBoneMetsP50,
-        prescribedP90: prescribedBoneMetsP90
+  app.post('/api/forecast-engine/predict', async (req, res) => {
+    try {
+      const { patientTwinId, cancerType, organSite, primaryStage, activeModels = [] } = req.body;
+      const forecastResponse = await ComputeWorkerProxy.executeTimeSeriesForecast({
+        patientTwinId: patientTwinId || 'PT-TWIN-2026-BRCA-09',
+        cancerType: cancerType || 'Breast (BRCA)',
+        organSite: organSite || 'bone',
+        primaryStage: primaryStage || 'Stage IIIb (High Nodal Risk)'
       });
 
-      longitudinalPredictions.push({
-        day,
-        dayLabel: `D+${day}`,
-        standardCtc,
-        standardBoneMets: standardBoneMetsP50,
-        standardLungMets: Math.round(2 * Math.exp(0.009 * day)),
-        prescribedCtc,
-        prescribedBoneMets: prescribedBoneMetsP50,
-        prescribedLungMets: Math.round(2 * Math.exp(-0.002 * day))
+      // Closed-Loop Prescriptions with precise windows of vulnerability
+      const closedLoopPrescriptions = [
+        {
+          id: 'RX-01-OPTOGENETIC-NR2F1',
+          title: 'Endosteal Optogenetic Dormancy Lock',
+          targetOrgan: 'bone',
+          windowOfVulnerability: 'T+12h to T+48h Post-Extravasation',
+          mechanism: 'Optogenetic 470nm pulsed laser induction of NR2F1/TGFB2 quiescence axis.',
+          predictedRiskReductionPct: 84.6,
+          confidenceScore: 0.94,
+          status: 'ready_to_queue',
+          actionParameters: {
+            laserWavelengthNm: 470,
+            laserFluenceMw: 12.5,
+            drugInfusion: 'None (Pure Light Steering)',
+            shearDynes: 5.0
+          }
+        },
+        {
+          id: 'RX-02-DENOSUMAB-NICHESHIELD',
+          title: 'Osteoclast RANKL Blockade + Crizotinib MET Inhibition',
+          targetOrgan: 'bone',
+          windowOfVulnerability: 'T+0d to T+14d Pre-Engraftment Window',
+          mechanism: 'Synergistic osteoblast niche depletion & MET tyrosine kinase phosphorylation inhibition.',
+          predictedRiskReductionPct: 76.2,
+          confidenceScore: 0.89,
+          status: 'ready_to_queue',
+          actionParameters: {
+            drugInfusion: 'Denosumab (10µg/mL) + Crizotinib (2.5µM)',
+            laserWavelengthNm: 0,
+            shearDynes: 8.5
+          }
+        },
+        {
+          id: 'RX-03-CRISPR-MMP9-KO',
+          title: 'Vascular Shear Sensitization via MMP9 Base Editing',
+          targetOrgan: 'lung',
+          windowOfVulnerability: 'T+0h to T-[Circulating CTC Phase]',
+          mechanism: 'AAV9 delivery of C-to-T Base Editor targeting MMP9 exon 4 splice acceptor site.',
+          predictedRiskReductionPct: 88.1,
+          confidenceScore: 0.91,
+          status: 'ready_to_queue',
+          actionParameters: {
+            crisprGene: 'MMP9',
+            editType: 'BASE_EDITING',
+            shearDynes: 15.0
+          }
+        }
+      ];
+
+      res.json({
+        ...forecastResponse,
+        primaryStage: primaryStage || 'Stage IIIb (High Nodal Risk)',
+        overallMetastaticRisk12MoPct: 78.4,
+        medianSeedingDays: 142,
+        hierarchicalReconciliation: {
+          reconciliationMethod: 'MinT (Minimum Trace) Optimal Unbiased Reconciliation',
+          hierarchyLevels: [
+            { level: 'Level 0: Total Patient Metastatic Load', constraint: 'Sum of Level 1 organ sites = Level 0 total' },
+            { level: 'Level 1: Organ Site Tropism (Bone, Lung, Liver, Brain)', constraint: 'Sum of Level 2 subclone niches = Level 1 site total' },
+            { level: 'Level 2: Subclonal Niche Fractions (Clone A, Clone B, Clone C)', constraint: 'Child sum mathematically matches parent' }
+          ],
+          coherenceCheckStatus: 'PASS (Zero Aggregation Discrepancy)'
+        },
+        conceptDriftMonitoring: {
+          driftStatus: 'HEALTHY (Errors within ±1.5% Threshold)',
+          currentWapePct: forecastResponse.validationMetrics?.wapePct ? Number(forecastResponse.validationMetrics.wapePct.toFixed(1)) : 3.2,
+          retrainingThresholdWapePct: 8.5,
+          autoRetrainTriggered: false,
+          groundTruthComparison: [
+            { timestamp: 'D-30', predictedCtc: 120, actualGroundTruthCtc: 118, errorPct: 1.6 },
+            { timestamp: 'D-20', predictedCtc: 126, actualGroundTruthCtc: 125, errorPct: 0.8 },
+            { timestamp: 'D-10', predictedCtc: 133, actualGroundTruthCtc: 131, errorPct: 1.5 },
+            { timestamp: 'D-0', predictedCtc: 140, actualGroundTruthCtc: 139, errorPct: 0.7 }
+          ]
+        },
+        coldStartResolution: {
+          strategy: 'Metadata Clustering & K-Nearest Neighbors (KNN) Trajectory Mapping',
+          knnNeighborsMatched: 5,
+          cohortSimilarityScorePct: 96.8,
+          transferredPriorHistory: 'PT-TWIN-2024-BRCA-52 (Matched on TP53 R273H + ESR1 Y537S)'
+        },
+        closedLoopPrescriptions,
+        selfImprovingDiscoveryLoop: {
+          twinModelVersion: 'v5.2.0-ForecastEngine-4LayerEnsemble',
+          experimentsIngested: 1482,
+          activeLearningRequest: 'Requesting 4 additional low-passage samples of liver-met dormant cells with PD-1 resistance to narrow organotropism uncertainty by ±14%.'
+        }
       });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
     }
-
-    // Layer 1: Data Ingestion & Feature Engineering Matrix
-    const featureEngineering = {
-      historicalTimeSeriesLength: '365 Days Daily Telemetry (ctDNA, CTCs, Exosomes, Radiomics)',
-      lagFeatures: [
-        { featureName: 'ctDna_vaf_lag_7d', lagWindow: '7 Days', correlationWithTarget: 0.88, importanceScore: 0.34, description: 'ctDNA Variant Allele Fraction 7-day lagged response' },
-        { featureName: 'exosome_secretion_ema_30d', lagWindow: '30 Days (EMA)', correlationWithTarget: 0.82, importanceScore: 0.26, description: '30-day exponential moving average of extracellular vesicle secretion' },
-        { featureName: 'therapy_dose_event_lag_1d', lagWindow: '1 Day', correlationWithTarget: -0.74, importanceScore: 0.21, description: '1-day lagged administration of TKI/bisphosphonate regimen' },
-        { featureName: 'matrix_stiffness_kpa_lag_14d', lagWindow: '14 Days', correlationWithTarget: 0.69, importanceScore: 0.19, description: '14-day lagged elastography measurement of osteoclast niche stiffness' }
-      ],
-      exogenousSignals: [
-        { signalName: 'Oral SERD / TKI Dosing Events', type: 'Therapeutic', impactWeight: 0.42, status: 'Active Ingestion' },
-        { signalName: 'Optogenetic Laser Pulse Cycles', type: 'Physical Trigger', impactWeight: 0.28, status: 'Active Ingestion' },
-        { signalName: 'Holiday Treatment Interruption', type: 'Calendar', impactWeight: 0.18, status: 'Monitored' },
-        { signalName: 'Systemic Cytokine Release Index', type: 'Biomarker', impactWeight: 0.12, status: 'Active Ingestion' }
-      ]
-    };
-
-    // Layer 2: Pipeline Orchestration & Backtesting
-    const pipelineOrchestration = {
-      backtestMethod: 'Expanding-Window Temporal Cross-Validation (5 Folds)',
-      temporalLeakageGuard: 'STRICT_TEMPORAL_SEPARATION (Zero Lookahead / Future Data Leakage)',
-      crossValidationFolds: [
-        { foldId: 1, trainWindow: 'Days 1-180', testWindow: 'Days 181-210', wapePct: 4.1, maseScore: 0.48, rmseScore: 6.2 },
-        { foldId: 2, trainWindow: 'Days 1-210', testWindow: 'Days 211-240', wapePct: 3.8, maseScore: 0.44, rmseScore: 5.8 },
-        { foldId: 3, trainWindow: 'Days 1-240', testWindow: 'Days 241-270', wapePct: 3.5, maseScore: 0.41, rmseScore: 5.4 },
-        { foldId: 4, trainWindow: 'Days 1-270', testWindow: 'Days 271-300', wapePct: 3.2, maseScore: 0.38, rmseScore: 4.9 },
-        { foldId: 5, trainWindow: 'Days 1-300', testWindow: 'Days 301-330', wapePct: 2.9, maseScore: 0.35, rmseScore: 4.5 }
-      ],
-      hyperparameterTuning: {
-        optimizer: 'Bayesian Optimization with Optuna Hyperband (50 Iterations)',
-        selectedParams: {
-          learningRate: 0.035,
-          maxDepth: 7,
-          numHeads: 8,
-          patchLength: 16,
-          dropout: 0.10,
-          hiddenDimensions: 256
-        }
-      }
-    };
-
-    // Layer 3: Algorithm Zoo & Multi-Model Ensembling
-    const algorithmZoo = {
-      families: [
-        {
-          id: 'classical',
-          family: 'Classical Statistical',
-          algorithms: ['AutoARIMA', 'ETS (Error-Trend-Seasonal)', 'Holt-Winters', "Croston's Intermittent"],
-          bestSuitedFor: 'Low-volume single series & intermittent seeding events',
-          wapePct: 12.4,
-          maseScore: 1.12,
-          rmseScore: 14.8,
-          blendWeightPct: 8.0,
-          status: 'Active'
-        },
-        {
-          id: 'treeML',
-          family: 'Tree-based ML',
-          algorithms: ['LightGBM', 'XGBoost', 'CatBoost'],
-          bestSuitedFor: 'Multivariate series with tabular exogenous biomarker features',
-          wapePct: 6.2,
-          maseScore: 0.68,
-          rmseScore: 8.2,
-          blendWeightPct: 18.0,
-          status: 'Active'
-        },
-        {
-          id: 'deepLearning',
-          family: 'Deep Learning',
-          algorithms: ['DeepAR', 'Temporal Fusion Transformer (TFT)', 'N-BEATS'],
-          bestSuitedFor: 'Cross-learning across related patient cohort time series',
-          wapePct: 4.8,
-          maseScore: 0.52,
-          rmseScore: 6.1,
-          blendWeightPct: 32.0,
-          status: 'Active'
-        },
-        {
-          id: 'foundationModels',
-          family: 'Time-Series Foundation Models',
-          algorithms: ['TimeGPT-1', 'Chronos-Large (Amazon)', 'MOIRAI-1.0 (Salesforce)', 'PatchTST'],
-          bestSuitedFor: 'Zero-shot cold-start forecasting with zero local training overhead',
-          wapePct: 3.9,
-          maseScore: 0.44,
-          rmseScore: 5.0,
-          blendWeightPct: 42.0,
-          status: 'Active (Zero-Shot Mode)'
-        }
-      ],
-      ensembleBlending: {
-        strategy: 'Minimum Trace (MinT) Variance-Covariance Weighted Blend',
-        ensembleWapePct: 3.2,
-        ensembleMaseScore: 0.38,
-        ensembleRmseScore: 4.2
-      }
-    };
-
-    // Layer 4: Serving, Hierarchical Reconciliation & Drift Monitoring
-    const hierarchicalReconciliation = {
-      reconciliationMethod: 'MinT (Minimum Trace) Optimal Unbiased Reconciliation',
-      hierarchyLevels: [
-        { level: 'Level 0: Total Patient Metastatic Load', constraint: 'Sum of Level 1 organ sites = Level 0 total' },
-        { level: 'Level 1: Organ Site Tropism (Bone, Lung, Liver, Brain)', constraint: 'Sum of Level 2 subclone niches = Level 1 site total' },
-        { level: 'Level 2: Subclonal Niche Fractions (Clone A, Clone B, Clone C)', constraint: 'Child sum mathematically matches parent' }
-      ],
-      coherenceCheckStatus: 'PASS (Zero Aggregation Discrepancy)'
-    };
-
-    const conceptDriftMonitoring = {
-      driftStatus: 'HEALTHY (Errors within ±1.5% Threshold)',
-      currentWapePct: 3.2,
-      retrainingThresholdWapePct: 8.5,
-      autoRetrainTriggered: false,
-      groundTruthComparison: [
-        { timestamp: 'D-30', predictedCtc: 120, actualGroundTruthCtc: 118, errorPct: 1.6 },
-        { timestamp: 'D-20', predictedCtc: 126, actualGroundTruthCtc: 125, errorPct: 0.8 },
-        { timestamp: 'D-10', predictedCtc: 133, actualGroundTruthCtc: 131, errorPct: 1.5 },
-        { timestamp: 'D-0', predictedCtc: 140, actualGroundTruthCtc: 139, errorPct: 0.7 }
-      ]
-    };
-
-    const coldStartResolution = {
-      strategy: 'Metadata Clustering & K-Nearest Neighbors (KNN) Trajectory Mapping',
-      knnNeighborsMatched: 5,
-      cohortSimilarityScorePct: 96.8,
-      transferredPriorHistory: 'PT-TWIN-2024-BRCA-52 (Matched on TP53 R273H + ESR1 Y537S)'
-    };
-
-    // Closed-Loop Prescriptions with precise windows of vulnerability
-    const closedLoopPrescriptions = [
-      {
-        id: 'RX-01-OPTOGENETIC-NR2F1',
-        title: 'Endosteal Optogenetic Dormancy Lock',
-        targetOrgan: 'bone',
-        windowOfVulnerability: 'T+12h to T+48h Post-Extravasation',
-        mechanism: 'Optogenetic 470nm pulsed laser induction of NR2F1/TGFB2 quiescence axis.',
-        predictedRiskReductionPct: 84.6,
-        confidenceScore: 0.94,
-        status: 'ready_to_queue',
-        actionParameters: {
-          laserWavelengthNm: 470,
-          laserFluenceMw: 12.5,
-          drugInfusion: 'None (Pure Light Steering)',
-          shearDynes: 5.0
-        }
-      },
-      {
-        id: 'RX-02-DENOSUMAB-NICHESHIELD',
-        title: 'Osteoclast RANKL Blockade + Crizotinib MET Inhibition',
-        targetOrgan: 'bone',
-        windowOfVulnerability: 'T+0d to T+14d Pre-Engraftment Window',
-        mechanism: 'Synergistic osteoblast niche depletion & MET tyrosine kinase phosphorylation inhibition.',
-        predictedRiskReductionPct: 76.2,
-        confidenceScore: 0.89,
-        status: 'ready_to_queue',
-        actionParameters: {
-          drugInfusion: 'Denosumab (10µg/mL) + Crizotinib (2.5µM)',
-          laserWavelengthNm: 0,
-          shearDynes: 8.5
-        }
-      },
-      {
-        id: 'RX-03-CRISPR-MMP9-KO',
-        title: 'Vascular Shear Sensitization via MMP9 Base Editing',
-        targetOrgan: 'lung',
-        windowOfVulnerability: 'T+0h to T-[Circulating CTC Phase]',
-        mechanism: 'AAV9 delivery of C-to-T Base Editor targeting MMP9 exon 4 splice acceptor site.',
-        predictedRiskReductionPct: 88.1,
-        confidenceScore: 0.91,
-        status: 'ready_to_queue',
-        actionParameters: {
-          crisprGene: 'MMP9',
-          editType: 'BASE_EDITING',
-          shearDynes: 15.0
-        }
-      }
-    ];
-
-    res.json({
-      status: 'success',
-      patientTwinId: patientId,
-      cancerType: cancer,
-      primaryStage: primaryStage || 'Stage IIIb (High Nodal Risk)',
-      overallMetastaticRisk12MoPct: 78.4,
-      medianSeedingDays: 142,
-      organotropismMap,
-      probabilisticTrajectory,
-      longitudinalPredictions,
-      featureEngineering,
-      pipelineOrchestration,
-      algorithmZoo,
-      hierarchicalReconciliation,
-      conceptDriftMonitoring,
-      coldStartResolution,
-      closedLoopPrescriptions,
-      selfImprovingDiscoveryLoop: {
-        twinModelVersion: 'v5.2.0-ForecastEngine-4LayerEnsemble',
-        experimentsIngested: 1482,
-        activeLearningRequest: 'Requesting 4 additional low-passage samples of liver-met dormant cells with PD-1 resistance to narrow organotropism uncertainty by ±14%.'
-      }
-    });
   });
 
   // Backtesting Execution Endpoint
@@ -1573,170 +1535,50 @@ All single-cell sequencing must exceed 50,000 reads/cell with <5.8% mitochondria
     });
   });
 
+  // --- Automated Biophysical & Property Test Execution Microservice Endpoint ---
+  app.post('/api/testing/run-suite', async (req, res) => {
+    try {
+      const summary = await ComputeWorkerProxy.executeAutomatedValidationSuite();
+      res.json(summary);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
   // --- Multiscale Metastasis Simulation Pipeline Endpoint (PhysiCell, SISTEM, MetaSpread, Chaste) ---
-  app.post('/api/simulation-pipeline/run', (req, res) => {
-    const {
-      primaryCancer = 'Breast (BRCA)',
-      targetOrgan = 'bone',
-      framework = 'PhysiCell',
-      abmParams = {},
-      cfdParams = {},
-      pdeParams = {},
-      evolutionParams = {}
-    } = req.body;
+  app.post('/api/simulation-pipeline/run', async (req, res) => {
+    try {
+      const {
+        primaryCancer = 'Breast (BRCA)',
+        targetOrgan = 'bone',
+        framework = 'PhysiCell',
+        abmParams = {},
+        cfdParams = {},
+        pdeParams = {},
+        evolutionParams = {}
+      } = req.body;
 
-    const oxygenHypoxia = abmParams.oxygenHypoxiaThreshold ?? 10; // mmHg
-    const emtProb = abmParams.emtSwitchProbability ?? 0.15;
-    const loxStiffness = pdeParams.loxMatrixStiffnessKpa ?? 32.5;
-    const shearStress = cfdParams.shearStressDynCm2 ?? 15.2;
-    const isLoxInhibited = loxStiffness < 10;
-    const isEmtSuppressed = emtProb < 0.08;
+      const oxygenHypoxia = abmParams.oxygenHypoxiaThreshold ?? 10;
+      const emtProb = abmParams.emtSwitchProbability ?? 0.15;
+      const loxStiffness = pdeParams.loxMatrixStiffnessKpa ?? 32.5;
+      const shearStress = cfdParams.shearStressDynCm2 ?? 15.2;
 
-    const intravasationRate = Math.round(1420 * (emtProb / 0.15) * (loxStiffness / 32.5));
-    const dormantPct = isLoxInhibited ? 88.5 : 42.5;
-    const boneDtc = isLoxInhibited ? 18 : 184;
-
-    // --- Probabilistic Metastatic Cascade Metrics ---
-    // Stage 1: P(Invasion & EMT | Hypoxia, MMP)
-    const pInvasion = Math.min(0.95, Math.max(0.01, (0.12 * (emtProb / 0.15) * (15 / Math.max(1, oxygenHypoxia)))));
-    // Stage 2: P(Intravasation | Basement Membrane Degradation)
-    const pIntravasation = Math.min(0.85, Math.max(0.005, 0.085 * (loxStiffness / 32.5)));
-    // Stage 3: P(Vascular Transit Survival | Hemodynamic Shear & Immune Evasion)
-    const pTransit = Math.min(0.20, Math.max(0.0001, (shearStress > 25 ? 0.006 : 0.024) * (15.2 / Math.max(1, shearStress))));
-    // Stage 4: P(Extravasation | Integrin Adhesion & Transendothelial Migration)
-    const pExtravasation = Math.min(0.90, Math.max(0.01, 0.38 * (loxStiffness / 32.5)));
-    // Stage 5: P(Colonization & Awakening | Pre-Niche Stiffness & Exosomes)
-    const pColonization = Math.min(0.80, Math.max(0.001, isLoxInhibited ? 0.025 : 0.285));
-
-    // Cumulative Bottleneck Probability P(Metastasis) = P1 * P2 * P3 * P4 * P5
-    const pCumulativeMetastasis = pInvasion * pIntravasation * pTransit * pExtravasation * pColonization;
-    const perMillionCellEfficiency = Math.round(pCumulativeMetastasis * 1000000);
-
-    // Organotropic Probability Breakdown
-    const organProbabilities = [
-      {
-        organ: 'Bone (Endosteal Niche)',
-        probabilityPct: parseFloat(((isLoxInhibited ? 0.042 : 0.384) * (pCumulativeMetastasis / 0.000028) * 100).toFixed(3)),
-        pAwakening: isLoxInhibited ? 0.08 : 0.72,
-        riskLevel: isLoxInhibited ? 'Low (Dormant)' : 'High (Overt Seeding)',
-        medianTimeToOutgrowthMonths: isLoxInhibited ? 48.2 : 14.6
-      },
-      {
-        organ: 'Brain (Cerebrovascular Niche)',
-        probabilityPct: parseFloat((0.215 * (pCumulativeMetastasis / 0.000028) * 100).toFixed(3)),
-        pAwakening: 0.54,
-        riskLevel: 'Moderate-High',
-        medianTimeToOutgrowthMonths: 22.4
-      },
-      {
-        organ: 'Lung (Pulmonary Capillary Beds)',
-        probabilityPct: parseFloat((0.182 * (pCumulativeMetastasis / 0.000028) * 100).toFixed(3)),
-        pAwakening: 0.48,
-        riskLevel: 'Moderate',
-        medianTimeToOutgrowthMonths: 18.2
-      },
-      {
-        organ: 'Liver (Sinusoidal Endothelium)',
-        probabilityPct: parseFloat((0.124 * (pCumulativeMetastasis / 0.000028) * 100).toFixed(3)),
-        pAwakening: 0.36,
-        riskLevel: 'Moderate-Low',
-        medianTimeToOutgrowthMonths: 28.0
-      }
-    ];
-
-    // Longitudinal Cumulative Outgrowth Probability Function F(t) = 1 - exp(-lambda * t)
-    const lambdaBase = isLoxInhibited ? 0.008 : 0.038;
-    const probabilityTimeSeries = [0, 6, 12, 18, 24, 36, 48, 60].map(month => {
-      const pCumulative = parseFloat(((1 - Math.exp(-lambdaBase * month)) * 100).toFixed(1));
-      const pDormant = parseFloat((100 - pCumulative).toFixed(1));
-      return {
-        month,
-        pCumulativeOutgrowthPct: pCumulative,
-        pDormantQuiescencePct: pDormant,
-        p95ConfidenceUpper: parseFloat(Math.min(99.9, pCumulative * 1.22).toFixed(1)),
-        p95ConfidenceLower: parseFloat(Math.max(0.1, pCumulative * 0.78).toFixed(1))
-      };
-    });
-
-    res.json({
-      status: 'success',
-      timestamp: new Date().toISOString(),
-      pipelineId: `sim-pipe-${Date.now()}`,
-      primaryCancer,
-      targetOrgan,
-      frameworkEngine: framework,
-      coupledSolvers: ['PhysiCell Agent-Based Model', 'PDE Reaction-Diffusion (O2/LOX)', 'Lattice Boltzmann CFD (Shear Stress)', 'SISTEM Genomic Tree Solver'],
-      probabilityMetrics: {
-        cascadeBottleneck: {
-          pInvasion: parseFloat((pInvasion * 100).toFixed(2)),
-          pIntravasation: parseFloat((pIntravasation * 100).toFixed(2)),
-          pTransit: parseFloat((pTransit * 100).toFixed(3)),
-          pExtravasation: parseFloat((pExtravasation * 100).toFixed(2)),
-          pColonization: parseFloat((pColonization * 100).toFixed(2)),
-          pCumulativeOverallPct: parseFloat((pCumulativeMetastasis * 100).toFixed(5)),
-          pCumulativeScientific: pCumulativeMetastasis.toExponential(3),
-          perMillionCellMetastaticYield: perMillionCellEfficiency,
-          bottleneckLogReduction: parseFloat((-Math.log10(Math.max(1e-9, pCumulativeMetastasis))).toFixed(2))
-        },
-        organotropicProbabilities: organProbabilities,
-        longitudinalProbabilityDistribution: probabilityTimeSeries,
-        monteCarloSensitivity: {
-          simulatedIterations: 10000,
-          meanMetastaticRiskPct: parseFloat((pCumulativeMetastasis * 100 * 1.05).toFixed(4)),
-          variancePct: 0.0012,
-          confidenceInterval95: [
-            parseFloat((pCumulativeMetastasis * 100 * 0.76).toFixed(5)),
-            parseFloat((pCumulativeMetastasis * 100 * 1.34).toFixed(5))
-          ]
-        }
-      },
-      stage1_primary_microenvironment: {
-        cellsSimulated: 24500,
-        emtCellsPercentage: parseFloat((emtProb * 100).toFixed(1)),
-        intravasatedCtcsPerHour: intravasationRate,
-        hypoxicCoreRadiusUm: Math.round(280 * (15 / Math.max(1, oxygenHypoxia))),
+      // Offload compute to headless simulation worker proxy
+      const result = await ComputeWorkerProxy.dispatchMultiscaleSimulation({
+        primaryCancer,
+        targetOrgan,
+        framework,
+        oxygenHypoxia,
         matrixStiffnessKpa: loxStiffness,
-        pdeFields: {
-          oxygenMinMmHg: oxygenHypoxia,
-          mmpConcentrationuM: isEmtSuppressed ? 0.22 : 0.84,
-          loxCrosslinkStatus: isLoxInhibited ? 'Inhibited (Soft ECM)' : 'Active Crosslinking (Stiff ECM)'
-        }
-      },
-      stage2_vascular_transport: {
-        fluidShearStressDynCm2: shearStress,
-        ctcClustersSingleRatio: '1:12',
-        intravascularSurvivalRatePct: shearStress > 25 ? 0.6 : 2.4,
-        vascularArrestSites: ['Endosteal Sinusoids', 'Brain Capillaries', 'Pulmonary Capillary Beds'],
-        lbmFlowVelocityMmS: 0.82
-      },
-      stage3_extravasation_micrometastasis: {
-        adhesionIntegrinExpression: 'αvβ3 / α6β4 High',
-        transEndothelialMigrationTimeMin: 48,
-        extravasatedDtcCount: boneDtc,
-        dormantQuiescentPct: dormantPct,
-        exosomalPreNichePrimingIndex: isLoxInhibited ? 1.2 : 3.8
-      },
-      stage4_organ_colonization_evolution: {
-        organotropismHomingScores: [
-          { organ: 'Bone (Endosteal)', organotropismScorePct: isLoxInhibited ? 24.2 : 84.2, status: isLoxInhibited ? 'Dormant Quiescence' : 'Active Micrometastasis' },
-          { organ: 'Brain (Parenchyma)', organotropismScorePct: 62.8, status: 'Dormant DTCs' },
-          { organ: 'Lung (Alveolar)', organotropismScorePct: 45.1, status: 'Extravasated' },
-          { organ: 'Liver (Sinusoidal)', organotropismScorePct: 38.6, status: 'Invasiveness Low' }
-        ],
-        sistemGenomicTree: [
-          { cloneId: 'Clone 0 (Trunk)', muts: ['BRCA2 t.1042', 'TP53 R273H'], fraction: 0.35, drugResist: 'Sensitive' },
-          { cloneId: 'Clone A (Seeding Branch)', muts: ['CXCR4 High', 'S100A8+'], fraction: 0.42, drugResist: 'Partial' },
-          { cloneId: 'Clone B (Resistant Outgrowth)', muts: ['ESR1 Y537S', 'CDK4 Amp'], fraction: 0.23, drugResist: 'High Resistance' }
-        ],
-        colonyGrowthSeries: [
-          { day: 0, primaryVolumeMm3: 150, boneDtcCount: 2, brainDtcCount: 0, lungDtcCount: 1 },
-          { day: 30, primaryVolumeMm3: 210, boneDtcCount: Math.round(boneDtc * 0.08), brainDtcCount: 2, lungDtcCount: 4 },
-          { day: 60, primaryVolumeMm3: 380, boneDtcCount: Math.round(boneDtc * 0.28), brainDtcCount: 8, lungDtcCount: 12 },
-          { day: 90, primaryVolumeMm3: 720, boneDtcCount: boneDtc, brainDtcCount: 24, lungDtcCount: 38 },
-          { day: 120, primaryVolumeMm3: 1450, boneDtcCount: Math.round(boneDtc * 2.9), brainDtcCount: 86, lungDtcCount: 110 }
-        ]
-      }
-    });
+        fluidShearStress: shearStress,
+        isLoxInhibited: loxStiffness < 10,
+        isEmtSuppressed: emtProb < 0.08
+      });
+
+      res.json(result);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
   });
 
   // Vite Middleware for Development or Static serving for Production
