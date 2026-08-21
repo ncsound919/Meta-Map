@@ -22,6 +22,7 @@ import { WorkflowEngine } from './components/modules/WorkflowEngine';
 import { GeminiMetastasisAssistant } from './components/modules/GeminiMetastasisAssistant';
 import { LabGradeCalibrationModal } from './components/LabGradeCalibrationModal';
 import { ClinicalProactiveInterceptionModule } from './components/modules/ClinicalProactiveInterceptionModule';
+import { ClinicalDataIngestionHub } from './components/modules/ClinicalDataIngestionHub';
 import { ModelValidationBacktestingSuite } from './components/modules/ModelValidationBacktestingSuite';
 import { MetastasisHpcComputeViewer } from './components/modules/MetastasisHpcComputeViewer';
 import { MetastasisSimulationPipelineModule } from './components/modules/MetastasisSimulationPipelineModule';
@@ -159,6 +160,15 @@ export default function App() {
               setActiveModule(modId);
               if (organ && organ !== 'all') setSelectedOrgan(organ as OrganSite);
             }}
+          />
+        )}
+
+        {activeModule === 'clinical_ingestion' && (
+          <ClinicalDataIngestionHub
+            onAssimilateToTwin={() => {
+              setActiveModule('model_validation');
+            }}
+            onNavigateToModule={(modId) => setActiveModule(modId)}
           />
         )}
 

@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { Slider } from '../ui/Slider';
+
 import {
   ShieldAlert,
   Dna,
@@ -377,24 +379,20 @@ CONFIDENTIAL - FOR CLINICAL MOLECULAR TUMOR BOARD DECISION SUPPORT ONLY
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
-                  <div className="space-y-2">
-                    <div className="flex justify-between font-mono">
-                      <span className="text-slate-300 font-bold">Exosome Secretion Multiplier:</span>
-                      <span className="text-indigo-400 font-bold">{exosomeMultiplier.toFixed(1)}x Baseline</span>
-                    </div>
-                    <input
-                      type="range"
-                      min="0.5"
-                      max="5.0"
-                      step="0.1"
-                      value={exosomeMultiplier}
-                      onChange={(e) => setExosomeMultiplier(parseFloat(e.target.value))}
-                      className="w-full accent-indigo-500 bg-slate-950 rounded"
-                    />
-                    <p className="text-[11px] text-slate-400">
+                  <div className="space-y-1">
+  <Slider
+  label="Exosome Secretion Multiplier:"
+  min={0.5}
+  max={5.0}
+  step={0.1}
+  value={exosomeMultiplier}
+  onChange={setExosomeMultiplier}
+  valueDisplay={<>{exosomeMultiplier.toFixed(1)}x Baseline</>}
+/>
+  <p className="text-[11px] text-slate-400">
                       Higher exosomal secretion accelerates endosteal Fibronectin deposition and S100A8/A9 myeloid progenitor recruitment.
                     </p>
-                  </div>
+</div>
 
                   <div className="space-y-2">
                     <span className="text-slate-300 font-bold block font-mono">Adjuvant Lysyl Oxidase (LOX) Inhibitor Treatment:</span>
@@ -471,10 +469,10 @@ CONFIDENTIAL - FOR CLINICAL MOLECULAR TUMOR BOARD DECISION SUPPORT ONLY
 
                   <div className="space-y-3">
                     {nicheData.nicheConditioningSignals.map((signal: any, idx: number) => (
-                      <div key={idx} className="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-1">
-                        <div className="flex justify-between items-center text-xs">
-                          <span className="font-bold text-white">{signal.marker}</span>
-                          <span className="text-amber-400 font-mono font-bold">{signal.level}</span>
+                      <div key={idx} className="space-y-1">
+                        <div className="flex justify-between text-xs font-mono">
+                          <span className="text-slate-300">{signal.marker}</span>
+                          <span className="text-indigo-400 font-bold">{signal.level}</span>
                         </div>
                         <p className="text-[11px] text-slate-400">{signal.role}</p>
                       </div>
@@ -692,21 +690,17 @@ CONFIDENTIAL - FOR CLINICAL MOLECULAR TUMOR BOARD DECISION SUPPORT ONLY
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
-                  <div className="space-y-2">
-                    <div className="flex justify-between font-mono">
-                      <span className="text-slate-300 font-bold">CHIP Variant VAF Filter Cutoff:</span>
-                      <span className="text-emerald-400 font-bold">{chipVafCutoff.toFixed(1)}% VAF</span>
-                    </div>
-                    <input
-                      type="range"
-                      min="0.1"
-                      max="3.0"
-                      step="0.1"
+                  <div className="space-y-1">
+                    <Slider
+                      label="CHIP Variant VAF Filter Cutoff:"
+                      min={0.1}
+                      max={3.0}
+                      step={0.1}
                       value={chipVafCutoff}
-                      onChange={(e) => setChipVafCutoff(parseFloat(e.target.value))}
-                      className="w-full accent-emerald-500 bg-slate-950 rounded"
+                      onChange={(val) => setChipVafCutoff(val)}
+                      valueDisplay={`${chipVafCutoff.toFixed(1)}% VAF`}
                     />
-                    <p className="text-[11px] text-slate-400">
+                    <p className="text-[11px] text-slate-400 pt-1">
                       Filters out age-related hematopoietic clones (DNMT3A, TET2, ASXL1) to prevent false-positive tumor driver assignments.
                     </p>
                   </div>

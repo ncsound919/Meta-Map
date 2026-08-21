@@ -2,17 +2,10 @@ import React, { useState } from 'react';
 import {
   Bone,
   Brain,
-  Activity,
   Wind,
   Droplets,
   Layers,
   Sparkles,
-  Shield,
-  Zap,
-  RotateCcw,
-  Download,
-  Info,
-  Sliders,
   Globe,
   ArrowRight
 } from 'lucide-react';
@@ -24,18 +17,20 @@ import { LungNicheEngine } from './colonization/LungNicheEngine';
 import { LiveNicheCanvas } from './colonization/LiveNicheCanvas';
 import { OrganotropismMatrixViewer } from './colonization/OrganotropismMatrixViewer';
 
+type SandboxTabId = 'bone' | 'brain' | 'liver' | 'lung' | 'canvas' | 'tropism_matrix';
+
 interface OrganColonizationSandboxModuleProps {
   selectedOrgan: OrganSite | 'all';
   selectedCancerType: PrimaryCancerType | 'all';
   onNavigateModule?: (moduleId: string, organ?: string) => void;
 }
 
-export const OrganColonizationSandboxModule: React.FC<OrganColonizationSandboxModuleProps> = ({
+export const OrganColonizationSandboxModule: React.FC<OrganColonizationSandboxModuleProps> = React.memo(({
   selectedOrgan: initialOrgan,
   selectedCancerType,
   onNavigateModule
 }) => {
-  const [activeTab, setActiveTab] = useState<'bone' | 'brain' | 'liver' | 'lung' | 'canvas' | 'tropism_matrix'>(
+  const [activeTab, setActiveTab] = useState<SandboxTabId>(
     initialOrgan === 'bone' ? 'bone' :
     initialOrgan === 'brain' ? 'brain' :
     initialOrgan === 'liver' ? 'liver' :
@@ -78,6 +73,7 @@ export const OrganColonizationSandboxModule: React.FC<OrganColonizationSandboxMo
           <div className="flex flex-wrap items-center gap-2 text-xs font-mono">
             {onNavigateModule && (
               <button
+                type="button"
                 onClick={() => onNavigateModule('circulatory_sim', currentOrgan)}
                 className="px-3 py-2 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 transition-all flex items-center gap-1.5"
               >
@@ -87,6 +83,7 @@ export const OrganColonizationSandboxModule: React.FC<OrganColonizationSandboxMo
             )}
             {onNavigateModule && (
               <button
+                type="button"
                 onClick={() => onNavigateModule('tumor_evolution_math', currentOrgan)}
                 className="px-3 py-2 rounded-xl border border-indigo-700/60 bg-indigo-950/80 hover:bg-indigo-900 text-indigo-200 transition-all flex items-center gap-1.5"
               >
@@ -98,8 +95,18 @@ export const OrganColonizationSandboxModule: React.FC<OrganColonizationSandboxMo
         </div>
 
         {/* Organ Niche Navigation Tabs */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 mt-6 pt-4 border-t border-slate-800/80">
+        <div 
+          role="tablist"
+          aria-label="Colonization sandbox components"
+          className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 mt-6 pt-4 border-t border-slate-800/80"
+        >
           <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === 'bone'}
+            aria-controls="panel-bone"
+            id="tab-bone"
+            tabIndex={activeTab === 'bone' ? 0 : -1}
             onClick={() => handleSelectOrganTab('bone')}
             className={`p-3 rounded-xl border text-left transition-all flex items-center gap-2.5 ${
               activeTab === 'bone'
@@ -115,6 +122,12 @@ export const OrganColonizationSandboxModule: React.FC<OrganColonizationSandboxMo
           </button>
 
           <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === 'brain'}
+            aria-controls="panel-brain"
+            id="tab-brain"
+            tabIndex={activeTab === 'brain' ? 0 : -1}
             onClick={() => handleSelectOrganTab('brain')}
             className={`p-3 rounded-xl border text-left transition-all flex items-center gap-2.5 ${
               activeTab === 'brain'
@@ -130,6 +143,12 @@ export const OrganColonizationSandboxModule: React.FC<OrganColonizationSandboxMo
           </button>
 
           <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === 'liver'}
+            aria-controls="panel-liver"
+            id="tab-liver"
+            tabIndex={activeTab === 'liver' ? 0 : -1}
             onClick={() => handleSelectOrganTab('liver')}
             className={`p-3 rounded-xl border text-left transition-all flex items-center gap-2.5 ${
               activeTab === 'liver'
@@ -145,6 +164,12 @@ export const OrganColonizationSandboxModule: React.FC<OrganColonizationSandboxMo
           </button>
 
           <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === 'lung'}
+            aria-controls="panel-lung"
+            id="tab-lung"
+            tabIndex={activeTab === 'lung' ? 0 : -1}
             onClick={() => handleSelectOrganTab('lung')}
             className={`p-3 rounded-xl border text-left transition-all flex items-center gap-2.5 ${
               activeTab === 'lung'
@@ -160,6 +185,12 @@ export const OrganColonizationSandboxModule: React.FC<OrganColonizationSandboxMo
           </button>
 
           <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === 'canvas'}
+            aria-controls="panel-canvas"
+            id="tab-canvas"
+            tabIndex={activeTab === 'canvas' ? 0 : -1}
             onClick={() => setActiveTab('canvas')}
             className={`p-3 rounded-xl border text-left transition-all flex items-center gap-2.5 ${
               activeTab === 'canvas'
@@ -175,6 +206,12 @@ export const OrganColonizationSandboxModule: React.FC<OrganColonizationSandboxMo
           </button>
 
           <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === 'tropism_matrix'}
+            aria-controls="panel-tropism_matrix"
+            id="tab-tropism_matrix"
+            tabIndex={activeTab === 'tropism_matrix' ? 0 : -1}
             onClick={() => setActiveTab('tropism_matrix')}
             className={`p-3 rounded-xl border text-left transition-all flex items-center gap-2.5 ${
               activeTab === 'tropism_matrix'
@@ -192,25 +229,36 @@ export const OrganColonizationSandboxModule: React.FC<OrganColonizationSandboxMo
       </div>
 
       {/* Main Tab Views */}
-      {activeTab === 'bone' && <BoneNicheEngine />}
-      {activeTab === 'brain' && <BrainNicheEngine />}
-      {activeTab === 'liver' && <LiverNicheEngine />}
-      {activeTab === 'lung' && <LungNicheEngine />}
-      {activeTab === 'canvas' && (
-        <LiveNicheCanvas
-          selectedOrgan={currentOrgan}
-        />
-      )}
-      {activeTab === 'tropism_matrix' && (
-        <OrganotropismMatrixViewer
-          selectedOrgan={currentOrgan}
-          onSelectOrgan={(organ) => {
-            setCurrentOrgan(organ);
-            setActiveTab(organ as any);
-          }}
-          selectedCancerType={selectedCancerType}
-        />
-      )}
+      <div 
+        role="tabpanel"
+        id={`panel-${activeTab}`}
+        aria-labelledby={`tab-${activeTab}`}
+        tabIndex={0}
+        className="outline-none"
+      >
+        {activeTab === 'bone' && <BoneNicheEngine />}
+        {activeTab === 'brain' && <BrainNicheEngine />}
+        {activeTab === 'liver' && <LiverNicheEngine />}
+        {activeTab === 'lung' && <LungNicheEngine />}
+        {activeTab === 'canvas' && (
+          <LiveNicheCanvas
+            selectedOrgan={currentOrgan}
+          />
+        )}
+        {activeTab === 'tropism_matrix' && (
+          <OrganotropismMatrixViewer
+            selectedOrgan={currentOrgan}
+            onSelectOrgan={(organ) => {
+              setCurrentOrgan(organ);
+              setActiveTab(organ as SandboxTabId);
+            }}
+            selectedCancerType={selectedCancerType}
+          />
+        )}
+      </div>
     </div>
   );
-};
+});
+
+OrganColonizationSandboxModule.displayName = 'OrganColonizationSandboxModule';
+

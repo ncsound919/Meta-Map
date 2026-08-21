@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { Slider } from '../../ui/Slider';
 import {
   Activity,
   Layers,
@@ -270,20 +271,16 @@ export const OrganVascularBedFiltration: React.FC = () => {
           <div className="space-y-4">
             {/* CTC Single Cell Diameter */}
             <div className="space-y-1">
-              <div className="flex justify-between text-xs font-mono">
-                <span className="text-slate-300">Individual CTC Diameter:</span>
-                <span className="text-rose-400 font-bold">{ctcDiameterUm} µm</span>
-              </div>
-              <input
-                type="range"
-                min="12"
-                max="30"
-                step="0.5"
+              <Slider
+                label="Individual CTC Diameter:"
+                min={12}
+                max={30}
+                step={0.5}
                 value={ctcDiameterUm}
-                onChange={(e) => setCtcDiameterUm(Number(e.target.value))}
-                className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-rose-500"
+                onChange={(val) => setCtcDiameterUm(val)}
+                valueDisplay={`${ctcDiameterUm} µm`}
               />
-              <div className="flex justify-between text-[10px] text-slate-500 font-mono">
+              <div className="flex justify-between text-[10px] text-slate-500 font-mono pt-1">
                 <span>RBC (7.5 µm)</span>
                 <span>Small CTC (15 µm)</span>
                 <span>Giant CTC (30 µm)</span>
@@ -317,20 +314,16 @@ export const OrganVascularBedFiltration: React.FC = () => {
 
             {/* Cytoskeletal Deformability */}
             <div className="space-y-1">
-              <div className="flex justify-between text-xs font-mono">
-                <span className="text-slate-300">Cytoskeletal Elastic Modulus (Young's E):</span>
-                <span className="text-cyan-400 font-bold">{ctcDeformabilityKpa} kPa</span>
-              </div>
-              <input
-                type="range"
-                min="0.2"
-                max="2.5"
-                step="0.05"
+              <Slider
+                label="Cytoskeletal Elastic Modulus (Young's E):"
+                min={0.2}
+                max={2.5}
+                step={0.05}
                 value={ctcDeformabilityKpa}
-                onChange={(e) => setCtcDeformabilityKpa(Number(e.target.value))}
-                className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-400"
+                onChange={(val) => setCtcDeformabilityKpa(val)}
+                valueDisplay={`${ctcDeformabilityKpa} kPa`}
               />
-              <div className="flex justify-between text-[10px] text-slate-500 font-mono">
+              <div className="flex justify-between text-[10px] text-slate-500 font-mono pt-1">
                 <span>Ultra-Deformable (0.2 kPa)</span>
                 <span>Rigid / Keratin-Dense (2.5 kPa)</span>
               </div>

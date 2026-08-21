@@ -3,19 +3,12 @@ import {
   Play,
   Pause,
   RotateCcw,
-  Sparkles,
   Zap,
-  Shield,
-  Activity,
-  Layers,
-  FlaskConical,
-  Flame,
-  Info,
-  Maximize2,
-  TrendingDown,
-  TrendingUp,
-  UserCheck
+  Activity
 } from 'lucide-react';
+
+const CANVAS_WIDTH = 800;
+const CANVAS_HEIGHT = 420;
 
 interface Agent {
   id: number;
@@ -42,7 +35,7 @@ export const SpatialAgentSimulator: React.FC = () => {
   const [stats, setStats] = useState({
     tumorCount: 45,
     cd8Count: 30,
-    tregCount: 12,
+    tregCount: 14,
     lysisEvents: 0,
     b2mEscapePct: 15
   });
@@ -50,12 +43,17 @@ export const SpatialAgentSimulator: React.FC = () => {
   const agentsRef = useRef<Agent[]>([]);
   const animFrameRef = useRef<number | null>(null);
   const lysisCountRef = useRef<number>(0);
+  const frameRef = useRef<number>(0);
+
+  const interventionRef = useRef({ antiPd1Active, tregDepleted, biteActive, stingBoost });
+
+  useEffect(() => {
+    interventionRef.current = { antiPd1Active, tregDepleted, biteActive, stingBoost };
+  }, [antiPd1Active, tregDepleted, biteActive, stingBoost]);
 
   // Initialize Cellular Agents
   const initAgents = () => {
     const agents: Agent[] = [];
-    const width = 800;
-    const height = 450;
 
     // 1. Seed Tumor Clones in the center
     for (let i = 0; i < 45; i++) {
@@ -68,8 +66,8 @@ export const SpatialAgentSimulator: React.FC = () => {
 
       agents.push({
         id: i,
-        x: width * 0.5 + Math.cos(angle) * dist,
-        y: height * 0.5 + Math.sin(angle) * dist,
+        x: CANVAS_WIDTH * 0.5 + Math.cos(angle) * dist,
+        y: CANVAS_HEIGHT * 0.5 + Math.sin(angle) * dist,
         vx: (Math.random() - 0.5) * 0.4,
         vy: (Math.random() - 0.5) * 0.4,
         radius: 6 + Math.random() * 2,
@@ -86,8 +84,8 @@ export const SpatialAgentSimulator: React.FC = () => {
       const dist = 180 + Math.random() * 100;
       agents.push({
         id: 100 + i,
-        x: width * 0.5 + Math.cos(angle) * dist,
-        y: height * 0.5 + Math.sin(angle) * dist,
+        x: CANVAS_WIDTH * 0.5 + Math.cos(angle) * dist,
+        y: CANVAS_HEIGHT * 0.5 + Math.sin(angle) * dist,
         vx: (Math.random() - 0.5) * 1.2,
         vy: (Math.random() - 0.5) * 1.2,
         radius: 5,
@@ -104,8 +102,8 @@ export const SpatialAgentSimulator: React.FC = () => {
       const dist = 80 + Math.random() * 80;
       agents.push({
         id: 200 + i,
-        x: width * 0.5 + Math.cos(angle) * dist,
-        y: height * 0.5 + Math.sin(angle) * dist,
+        x: CANVAS_WIDTH * 0.5 + Math.cos(angle) * dist,
+        y: CANVAS_HEIGHT * 0.5 + Math.sin(angle) * dist,
         vx: (Math.random() - 0.5) * 0.5,
         vy: (Math.random() - 0.5) * 0.5,
         radius: 5.5,
@@ -118,6 +116,13 @@ export const SpatialAgentSimulator: React.FC = () => {
 
     agentsRef.current = agents;
     lysisCountRef.current = 0;
+    setStats({
+      tumorCount: 45,
+      cd8Count: 30,
+      tregCount: 14,
+      lysisEvents: 0,
+      b2mEscapePct: 15
+    });
   };
 
   useEffect(() => {
@@ -126,15 +131,13 @@ export const SpatialAgentSimulator: React.FC = () => {
 
   // Influx T cells
   const injectTILs = () => {
-    const width = 800;
-    const height = 450;
     for (let i = 0; i < 15; i++) {
       const angle = Math.random() * Math.PI * 2;
       const dist = 220 + Math.random() * 50;
       agentsRef.current.push({
         id: Date.now() + i,
-        x: width * 0.5 + Math.cos(angle) * dist,
-        y: height * 0.5 + Math.sin(angle) * dist,
+        x: CANVAS_WIDTH * 0.5 + Math.cos(angle) * dist,
+        y: CANVAS_HEIGHT * 0.5 + Math.sin(angle) * dist,
         vx: (Math.random() - 0.5) * 1.5,
         vy: (Math.random() - 0.5) * 1.5,
         radius: 5,
@@ -152,10 +155,8 @@ export const SpatialAgentSimulator: React.FC = () => {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    let frame = 0;
-
     const render = () => {
-      frame++;
+      frameRef.current++;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       const centerX = canvas.width * 0.5;
@@ -183,6 +184,8 @@ export const SpatialAgentSimulator: React.FC = () => {
       // Process Agent Interactions & Kinetics
       for (let i = 0; i < agents.length; i++) {
         const a = agents[i];
+        if (a.health <= 0) continue;
+
         a.age++;
 
         // Chemotaxis towards center for T-cells
@@ -190,7 +193,7 @@ export const SpatialAgentSimulator: React.FC = () => {
           const dx = centerX - a.x;
           const dy = centerY - a.y;
           const dist = Math.sqrt(dx * dx + dy * dy);
-          const chemotaxisSpeed = (stingBoost ? 0.35 : 0.18) / Math.max(dist, 10);
+          const chemotaxisSpeed = (interventionRef.current.stingBoost ? 0.35 : 0.18) / Math.max(dist, 10);
           a.vx += dx * chemotaxisSpeed;
           a.vy += dy * chemotaxisSpeed;
 
@@ -215,6 +218,8 @@ export const SpatialAgentSimulator: React.FC = () => {
         // Interaction checks with neighbors
         for (let j = i + 1; j < agents.length; j++) {
           const b = agents[j];
+          if (b.health <= 0) continue;
+          
           const cdx = b.x - a.x;
           const cdy = b.y - a.y;
           const cdist = Math.sqrt(cdx * cdx + cdy * cdy);
@@ -227,11 +232,11 @@ export const SpatialAgentSimulator: React.FC = () => {
               if (b.type === 'tumor_sensitive') {
                 canKill = a.exhaustion < 80;
               } else if (b.type === 'tumor_pdl1') {
-                canKill = antiPd1Active && a.exhaustion < 80;
-                if (!antiPd1Active) a.exhaustion += 2.5; // PD-1 engages brake
+                canKill = interventionRef.current.antiPd1Active && a.exhaustion < 80;
+                if (!interventionRef.current.antiPd1Active) a.exhaustion += 2.5; // PD-1 engages brake
               } else if (b.type === 'tumor_b2m_null') {
                 // Resistant unless BiTE is active!
-                canKill = biteActive;
+                canKill = interventionRef.current.biteActive;
               }
 
               if (canKill) {
@@ -249,12 +254,14 @@ export const SpatialAgentSimulator: React.FC = () => {
 
             // Case 2: Treg or M2 TAM paralyzes CD8+ T Cell
             if ((a.type === 'treg' || a.type === 'm2_tam') && b.type === 'cd8_tcell') {
-              if (!tregDepleted) {
+              if (!interventionRef.current.tregDepleted) {
                 b.exhaustion = Math.min(100, b.exhaustion + 1.2);
               }
             }
           }
         }
+
+        if (a.health <= 0) continue;
 
         // Draw Agents
         ctx.beginPath();
@@ -278,7 +285,7 @@ export const SpatialAgentSimulator: React.FC = () => {
           ctx.shadowColor = '#9333ea';
           ctx.shadowBlur = 8;
         } else if (a.type === 'treg') {
-          ctx.fillStyle = tregDepleted ? 'rgba(251, 113, 133, 0.2)' : '#fb7185';
+          ctx.fillStyle = interventionRef.current.tregDepleted ? 'rgba(251, 113, 133, 0.2)' : '#fb7185';
           ctx.shadowBlur = 0;
         } else if (a.type === 'm2_tam') {
           ctx.fillStyle = '#fbbf24';
@@ -297,7 +304,7 @@ export const SpatialAgentSimulator: React.FC = () => {
       agentsRef.current = newAgents;
 
       // Update counters every 15 frames
-      if (frame % 15 === 0) {
+      if (frameRef.current % 15 === 0) {
         const tumors = newAgents.filter((a) => a.type.startsWith('tumor'));
         const b2m = newAgents.filter((a) => a.type === 'tumor_b2m_null');
         setStats({
@@ -319,7 +326,7 @@ export const SpatialAgentSimulator: React.FC = () => {
     return () => {
       if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
     };
-  }, [isRunning, antiPd1Active, tregDepleted, biteActive, stingBoost]);
+  }, [isRunning]);
 
   return (
     <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4">
@@ -336,6 +343,7 @@ export const SpatialAgentSimulator: React.FC = () => {
 
         <div className="flex items-center gap-2">
           <button
+            type="button"
             onClick={() => setIsRunning(!isRunning)}
             className="p-2 rounded-lg bg-slate-800 border border-slate-700 text-slate-200 hover:bg-slate-700 text-xs font-mono flex items-center gap-1.5"
           >
@@ -343,12 +351,14 @@ export const SpatialAgentSimulator: React.FC = () => {
             {isRunning ? 'Pause' : 'Resume'}
           </button>
           <button
+            type="button"
             onClick={initAgents}
             className="p-2 rounded-lg bg-slate-800 border border-slate-700 text-slate-200 hover:bg-slate-700 text-xs font-mono flex items-center gap-1.5"
           >
             <RotateCcw className="w-3.5 h-3.5" /> Reset Colony
           </button>
           <button
+            type="button"
             onClick={injectTILs}
             className="px-3 py-2 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs font-mono flex items-center gap-1.5 shadow-md shadow-cyan-950"
           >
@@ -361,9 +371,10 @@ export const SpatialAgentSimulator: React.FC = () => {
       <div className="relative rounded-xl border border-slate-800 bg-slate-950 overflow-hidden">
         <canvas
           ref={canvasRef}
-          width={800}
-          height={420}
-          className="w-full h-[420px] block"
+          width={CANVAS_WIDTH}
+          height={CANVAS_HEIGHT}
+          className="w-full block"
+          style={{ height: CANVAS_HEIGHT }}
         />
 
         {/* Live HUD Counters */}
@@ -406,6 +417,8 @@ export const SpatialAgentSimulator: React.FC = () => {
       {/* Intervention Shock Controls */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2">
         <button
+          type="button"
+          aria-pressed={antiPd1Active}
           onClick={() => setAntiPd1Active(!antiPd1Active)}
           className={`p-3 rounded-xl border text-left font-mono text-xs transition-all space-y-1 ${
             antiPd1Active
@@ -425,6 +438,8 @@ export const SpatialAgentSimulator: React.FC = () => {
         </button>
 
         <button
+          type="button"
+          aria-pressed={biteActive}
           onClick={() => setBiteActive(!biteActive)}
           className={`p-3 rounded-xl border text-left font-mono text-xs transition-all space-y-1 ${
             biteActive
@@ -444,6 +459,8 @@ export const SpatialAgentSimulator: React.FC = () => {
         </button>
 
         <button
+          type="button"
+          aria-pressed={tregDepleted}
           onClick={() => setTregDepleted(!tregDepleted)}
           className={`p-3 rounded-xl border text-left font-mono text-xs transition-all space-y-1 ${
             tregDepleted
@@ -463,6 +480,8 @@ export const SpatialAgentSimulator: React.FC = () => {
         </button>
 
         <button
+          type="button"
+          aria-pressed={stingBoost}
           onClick={() => setStingBoost(!stingBoost)}
           className={`p-3 rounded-xl border text-left font-mono text-xs transition-all space-y-1 ${
             stingBoost

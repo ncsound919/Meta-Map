@@ -130,7 +130,7 @@ export const SpatialImmuneTopology: React.FC = () => {
           {Object.values(PHENOTYPES).map((phenotype) => {
             const isSelected = selectedPhenotype === phenotype.id;
             return (
-              <button
+              <button type="button"
                 key={phenotype.id}
                 onClick={() => {
                   setSelectedPhenotype(phenotype.id);
@@ -242,7 +242,7 @@ export const SpatialImmuneTopology: React.FC = () => {
                   <span className="text-xs font-mono font-bold text-amber-300 flex items-center gap-1.5">
                     <Sparkles className="w-3.5 h-3.5" /> Interventional Matrix Degradation
                   </span>
-                  <button
+                  <button type="button"
                     onClick={() => setApplyMatrixBreaker(!applyMatrixBreaker)}
                     className={`px-3 py-1 rounded-lg text-xs font-mono font-bold transition-all ${
                       applyMatrixBreaker

@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
+import { Slider } from "../ui/Slider";
 import { OrganSite, PrimaryCancerType } from '../../types/metastasis';
 import {
   Flame,
@@ -216,21 +217,17 @@ export const ResistanceForgeModule: React.FC<ResistanceForgeModuleProps> = ({
           </div>
 
           {/* Acceleration Factor Slider */}
-          <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-2 text-xs">
-            <div className="flex justify-between items-center">
-              <label className="text-slate-300 font-bold">Evolutionary Speed Acceleration:</label>
-              <span className="font-mono text-rose-300 font-bold">{accelerationFactor}x Speed</span>
-            </div>
-            <input
-              type="range"
-              min="10"
-              max="100"
-              step="10"
+          <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-1 text-xs">
+            <Slider
+              label="Evolutionary Speed Acceleration:"
+              min={10}
+              max={100}
+              step={10}
               value={accelerationFactor}
-              onChange={(e) => setAccelerationFactor(Number(e.target.value))}
-              className="w-full accent-rose-500 bg-slate-800 h-2 rounded-lg cursor-pointer"
+              onChange={(val) => setAccelerationFactor(val)}
+              valueDisplay={`${accelerationFactor}x Speed`}
             />
-            <p className="text-[10px] text-slate-500">
+            <p className="text-[10px] text-slate-500 pt-1">
               {accelerationFactor}x = 20 generations (2 years of patient evolution) simulated in ~{(280 / accelerationFactor).toFixed(1)} minutes.
             </p>
           </div>

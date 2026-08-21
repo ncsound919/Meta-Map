@@ -6,16 +6,14 @@ import {
   Layers,
   Cpu,
   Droplets,
-  Activity,
   Zap,
-  Info,
   Shield,
   ArrowRight,
   Sparkles,
-  ExternalLink,
   BookOpen,
   Filter,
-  Network
+  Network,
+  LucideIcon
 } from 'lucide-react';
 import { OrganSite, PrimaryCancerType } from '../../types/metastasis';
 import { Windkessel0DViewer } from './circulatory/Windkessel0DViewer';
@@ -30,13 +28,26 @@ import { PlateletImmuneCloakingEngine } from './circulatory/PlateletImmuneCloaki
 import { WholeBodyMetastaticPerfusionNetwork } from './circulatory/WholeBodyMetastaticPerfusionNetwork';
 import { MicroconstrictionNuclearDeformation } from './circulatory/MicroconstrictionNuclearDeformation';
 
+type SimulatorTabId =
+  | 'microdynamics'
+  | 'platelet_cloaking'
+  | 'whole_body_perfusion'
+  | 'nuclear_deformation'
+  | 'organ_beds'
+  | 'extravasation'
+  | 'bifurcation'
+  | '0d_windkessel'
+  | '1d_wave'
+  | '3d_cfd'
+  | 'benchtop_mcl';
+
 interface CirculatorySimulatorProps {
   selectedOrgan: OrganSite | 'all';
   selectedCancerType: PrimaryCancerType | 'all';
   onNavigateModule?: (moduleId: string, organ?: string) => void;
 }
 
-export const CirculatorySimulatorModule: React.FC<CirculatorySimulatorProps> = ({
+export const CirculatorySimulatorModule: React.FC<CirculatorySimulatorProps> = React.memo(({
   selectedOrgan,
   selectedCancerType,
   onNavigateModule
@@ -53,19 +64,93 @@ export const CirculatorySimulatorModule: React.FC<CirculatorySimulatorProps> = (
   // 9. 1D Wave Propagation (Pulse reflection / CARDIOSIM)
   // 10. 3D Multiphysics CFD & FSI (SimVascular / OpenFOAM / FFR)
   // 11. Benchtop Mock Circulatory Loops (LVAD / TAH / Valves)
-  const [activeTab, setActiveTab] = useState<
-    | 'microdynamics'
-    | 'platelet_cloaking'
-    | 'whole_body_perfusion'
-    | 'nuclear_deformation'
-    | 'organ_beds'
-    | 'extravasation'
-    | 'bifurcation'
-    | '0d_windkessel'
-    | '1d_wave'
-    | '3d_cfd'
-    | 'benchtop_mcl'
-  >('microdynamics');
+  const [activeTab, setActiveTab] = useState<SimulatorTabId>('microdynamics');
+
+  const tabs: Array<{
+    id: SimulatorTabId;
+    label: string;
+    sublabel: string;
+    icon: LucideIcon;
+    badgeColor: string;
+  }> = [
+    {
+      id: 'microdynamics',
+      label: 'CTC Microvascular Transport',
+      sublabel: 'Poiseuille • Margination • Arrest',
+      icon: Droplets,
+      badgeColor: 'border-rose-500/30 text-rose-300 bg-rose-500/10'
+    },
+    {
+      id: 'platelet_cloaking',
+      label: 'Platelet Cloaking & NK Evasion',
+      sublabel: 'Thrombus Corona • TGF-β • MHC Mimicry',
+      icon: Shield,
+      badgeColor: 'border-emerald-500/30 text-emerald-300 bg-emerald-500/10'
+    },
+    {
+      id: 'whole_body_perfusion',
+      label: 'Whole-Body Closed-Loop Circuit',
+      sublabel: "Portal Sieve • Batson's Plexus • Multi-Pass",
+      icon: Heart,
+      badgeColor: 'border-cyan-500/30 text-cyan-300 bg-cyan-500/10'
+    },
+    {
+      id: 'nuclear_deformation',
+      label: 'Nuclear Squeeze & DNA Damage',
+      sublabel: 'Kelvin-Voigt • Lamin A/C • cGAS-STING',
+      icon: Zap,
+      badgeColor: 'border-purple-500/30 text-purple-300 bg-purple-500/10'
+    },
+    {
+      id: 'organ_beds',
+      label: 'Organ Vascular Beds',
+      sublabel: 'Steric Sieve • Fenestrations • Pores',
+      icon: Filter,
+      badgeColor: 'border-cyan-500/30 text-cyan-300 bg-cyan-500/10'
+    },
+    {
+      id: 'extravasation',
+      label: 'Extravasation & Diapedesis',
+      sublabel: 'Bell Catch-Bonds • VE-Cadherin • MMP',
+      icon: Sparkles,
+      badgeColor: 'border-amber-500/30 text-amber-300 bg-amber-500/10'
+    },
+    {
+      id: 'bifurcation',
+      label: 'Bifurcation & Skimming',
+      sublabel: "Murray's Law • Zweifach-Fung • Apex",
+      icon: GitBranch,
+      badgeColor: 'border-purple-500/30 text-purple-300 bg-purple-500/10'
+    },
+    {
+      id: '0d_windkessel',
+      label: '0D Lumped-Parameter (0D)',
+      sublabel: 'Windkessel 2/3/4 • PV Loops',
+      icon: Radio,
+      badgeColor: 'border-amber-500/30 text-amber-300 bg-amber-500/10'
+    },
+    {
+      id: '1d_wave',
+      label: '1D Wave Propagation (1D)',
+      sublabel: 'Moens-Korteweg • Pulse Reflections',
+      icon: Network,
+      badgeColor: 'border-cyan-500/30 text-cyan-300 bg-cyan-500/10'
+    },
+    {
+      id: '3d_cfd',
+      label: '3D Multiphysics CFD / FSI (3D)',
+      sublabel: 'Navier-Stokes • WSS • FFR-CT',
+      icon: Layers,
+      badgeColor: 'border-purple-500/30 text-purple-300 bg-purple-500/10'
+    },
+    {
+      id: 'benchtop_mcl',
+      label: 'Benchtop Mock Loop (MCL)',
+      sublabel: 'In Vitro Actuators • LVADs • Valves',
+      icon: Cpu,
+      badgeColor: 'border-emerald-500/30 text-emerald-300 bg-emerald-500/10'
+    }
+  ];
 
   return (
     <div className="space-y-6" id="circulatory-simulator-module">
@@ -98,6 +183,7 @@ export const CirculatorySimulatorModule: React.FC<CirculatorySimulatorProps> = (
           {onNavigateModule && (
             <div className="flex items-center gap-2">
               <button
+                type="button"
                 onClick={() => onNavigateModule('pipeline', selectedOrgan !== 'all' ? selectedOrgan : 'bone')}
                 className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-mono border border-slate-700 flex items-center gap-1.5 transition-all"
               >
@@ -108,107 +194,39 @@ export const CirculatorySimulatorModule: React.FC<CirculatorySimulatorProps> = (
         </div>
 
         {/* Framework Switcher Navigation Ribbon */}
-        <div className="flex flex-wrap items-center gap-2 mt-6 pt-6 border-t border-slate-800">
-          {[
-            {
-              id: 'microdynamics',
-              label: 'CTC Microvascular Transport',
-              sublabel: 'Poiseuille • Margination • Arrest',
-              icon: Droplets,
-              badgeColor: 'border-rose-500/30 text-rose-300 bg-rose-500/10'
-            },
-            {
-              id: 'platelet_cloaking',
-              label: 'Platelet Cloaking & NK Evasion',
-              sublabel: 'Thrombus Corona • TGF-β • MHC Mimicry',
-              icon: Shield,
-              badgeColor: 'border-emerald-500/30 text-emerald-300 bg-emerald-500/10'
-            },
-            {
-              id: 'whole_body_perfusion',
-              label: 'Whole-Body Closed-Loop Circuit',
-              sublabel: "Portal Sieve • Batson's Plexus • Multi-Pass",
-              icon: Heart,
-              badgeColor: 'border-cyan-500/30 text-cyan-300 bg-cyan-500/10'
-            },
-            {
-              id: 'nuclear_deformation',
-              label: 'Nuclear Squeeze & DNA Damage',
-              sublabel: 'Kelvin-Voigt • Lamin A/C • cGAS-STING',
-              icon: Zap,
-              badgeColor: 'border-purple-500/30 text-purple-300 bg-purple-500/10'
-            },
-            {
-              id: 'organ_beds',
-              label: 'Organ Vascular Beds',
-              sublabel: 'Steric Sieve • Fenestrations • Pores',
-              icon: Filter,
-              badgeColor: 'border-cyan-500/30 text-cyan-300 bg-cyan-500/10'
-            },
-            {
-              id: 'extravasation',
-              label: 'Extravasation & Diapedesis',
-              sublabel: 'Bell Catch-Bonds • VE-Cadherin • MMP',
-              icon: Sparkles,
-              badgeColor: 'border-amber-500/30 text-amber-300 bg-amber-500/10'
-            },
-            {
-              id: 'bifurcation',
-              label: 'Bifurcation & Skimming',
-              sublabel: "Murray's Law • Zweifach-Fung • Apex",
-              icon: GitBranch,
-              badgeColor: 'border-purple-500/30 text-purple-300 bg-purple-500/10'
-            },
-            {
-              id: '0d_windkessel',
-              label: '0D Lumped-Parameter (0D)',
-              sublabel: 'Windkessel 2/3/4 • PV Loops',
-              icon: Radio,
-              badgeColor: 'border-amber-500/30 text-amber-300 bg-amber-500/10'
-            },
-            {
-              id: '1d_wave',
-              label: '1D Wave Propagation (1D)',
-              sublabel: 'Moens-Korteweg • Pulse Reflections',
-              icon: Network,
-              badgeColor: 'border-cyan-500/30 text-cyan-300 bg-cyan-500/10'
-            },
-            {
-              id: '3d_cfd',
-              label: '3D Multiphysics CFD / FSI (3D)',
-              sublabel: 'Navier-Stokes • WSS • FFR-CT',
-              icon: Layers,
-              badgeColor: 'border-purple-500/30 text-purple-300 bg-purple-500/10'
-            },
-            {
-              id: 'benchtop_mcl',
-              label: 'Benchtop Mock Loop (MCL)',
-              sublabel: 'In Vitro Actuators • LVADs • Valves',
-              icon: Cpu,
-              badgeColor: 'border-emerald-500/30 text-emerald-300 bg-emerald-500/10'
-            }
-          ].map((tab) => {
+        <div 
+          role="tablist"
+          aria-label="Circulatory simulator frameworks"
+          className="flex flex-nowrap sm:flex-wrap items-center gap-2 mt-6 pt-6 border-t border-slate-800 overflow-x-auto min-w-max sm:min-w-0 pb-2 sm:pb-0"
+        >
+          {tabs.map((tab) => {
             const Icon = tab.icon;
             const isCurrent = activeTab === tab.id;
             return (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
-                className={`flex items-center gap-3 px-3.5 py-2 rounded-xl border transition-all text-left ${
+                role="tab"
+                type="button"
+                aria-selected={isCurrent}
+                aria-controls={`panel-${tab.id}`}
+                id={`tab-${tab.id}`}
+                tabIndex={isCurrent ? 0 : -1}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-3 px-3.5 py-2 rounded-xl border transition-all text-left whitespace-nowrap sm:whitespace-normal ${
                   isCurrent
                     ? 'bg-slate-800 border-rose-500 shadow-md shadow-rose-950/30 text-white'
                     : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
                 }`}
               >
-                <div className={`p-1.5 rounded-lg ${isCurrent ? 'bg-rose-500/20 text-rose-400' : 'bg-slate-900 text-slate-500'}`}>
+                <div className={`p-1.5 rounded-lg ${isCurrent ? tab.badgeColor : 'bg-slate-900 text-slate-500'}`}>
                   <Icon className="w-4 h-4" />
                 </div>
                 <div>
                   <div className="font-bold text-xs flex items-center gap-1.5">
                     <span>{tab.label}</span>
-                    {isCurrent && <span className="w-1.5 h-1.5 rounded-full bg-rose-400 animate-ping" />}
+                    {/* Active Tab indicator removed for less distraction, relying on selected styling instead */}
                   </div>
-                  <span className="text-[9px] font-mono text-slate-500 block">{tab.sublabel}</span>
+                  <span className="text-[9px] font-mono text-slate-500 hidden sm:block">{tab.sublabel}</span>
                 </div>
               </button>
             );
@@ -217,32 +235,45 @@ export const CirculatorySimulatorModule: React.FC<CirculatorySimulatorProps> = (
       </div>
 
       {/* Active Framework Stage View */}
-      {activeTab === 'microdynamics' && (
-        <CirculatoryMicrodynamicsStage
-          selectedOrgan={selectedOrgan}
-          selectedCancerType={selectedCancerType}
-        />
-      )}
+      <div 
+        role="tabpanel" 
+        id={`panel-${activeTab}`} 
+        aria-labelledby={`tab-${activeTab}`}
+        className="outline-none"
+        tabIndex={0}
+      >
+        {activeTab === 'microdynamics' && (
+          <CirculatoryMicrodynamicsStage
+            selectedOrgan={selectedOrgan}
+            selectedCancerType={selectedCancerType}
+          />
+        )}
 
-      {activeTab === 'platelet_cloaking' && <PlateletImmuneCloakingEngine />}
+        {/* 
+          Note: selectedOrgan and selectedCancerType are only forwarded to CirculatoryMicrodynamicsStage.
+          Other modules currently do not accept these props in their interfaces. If they are needed
+          in the future, update the respective module's props interface and pass them here.
+        */}
+        {activeTab === 'platelet_cloaking' && <PlateletImmuneCloakingEngine />}
 
-      {activeTab === 'whole_body_perfusion' && <WholeBodyMetastaticPerfusionNetwork />}
+        {activeTab === 'whole_body_perfusion' && <WholeBodyMetastaticPerfusionNetwork />}
 
-      {activeTab === 'nuclear_deformation' && <MicroconstrictionNuclearDeformation />}
+        {activeTab === 'nuclear_deformation' && <MicroconstrictionNuclearDeformation />}
 
-      {activeTab === 'organ_beds' && <OrganVascularBedFiltration />}
+        {activeTab === 'organ_beds' && <OrganVascularBedFiltration />}
 
-      {activeTab === 'extravasation' && <ExtravasationAdhesionKinetics />}
+        {activeTab === 'extravasation' && <ExtravasationAdhesionKinetics />}
 
-      {activeTab === 'bifurcation' && <BifurcationHemodynamicsSimulator />}
+        {activeTab === 'bifurcation' && <BifurcationHemodynamicsSimulator />}
 
-      {activeTab === '0d_windkessel' && <Windkessel0DViewer />}
+        {activeTab === '0d_windkessel' && <Windkessel0DViewer />}
 
-      {activeTab === '1d_wave' && <WavePropagation1DViewer />}
+        {activeTab === '1d_wave' && <WavePropagation1DViewer />}
 
-      {activeTab === '3d_cfd' && <MultiphysicsCFD3DViewer />}
+        {activeTab === '3d_cfd' && <MultiphysicsCFD3DViewer />}
 
-      {activeTab === 'benchtop_mcl' && <BenchtopMockLoopViewer />}
+        {activeTab === 'benchtop_mcl' && <BenchtopMockLoopViewer />}
+      </div>
 
       {/* Software Engines & Clinical Reference Guide Footnote */}
       <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-3">
@@ -274,4 +305,6 @@ export const CirculatorySimulatorModule: React.FC<CirculatorySimulatorProps> = (
       </div>
     </div>
   );
-};
+});
+
+CirculatorySimulatorModule.displayName = 'CirculatorySimulatorModule';

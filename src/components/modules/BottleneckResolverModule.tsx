@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Slider } from '../ui/Slider';
 import { 
   Layers, 
   Dna, 
@@ -39,7 +40,7 @@ export const BottleneckResolverModule: React.FC<BottleneckResolverProps> = ({
   selectedOrgan,
   selectedCancerType
 }) => {
-  const [activeTab, setActiveTab] = useState<'batch_corrector' | 'model_matcher' | 'paired_divergence' | 'mrd_simulator'>('batch_corrector');
+  const [activeTab, setActiveTab] = useState<'batch_corrector' | 'model_matcher' | 'paired_divergence' | 'mrd_simulator' | 'dormancy_interception'>('batch_corrector');
 
   // Tool 1 State: Batch Corrector
   const [datasetA, setDatasetA] = useState<string>('HTAN_scRNA_Colon_Niche');
@@ -68,6 +69,14 @@ export const BottleneckResolverModule: React.FC<BottleneckResolverProps> = ({
   const [drugEfficacyPct, setDrugEfficacyPct] = useState<number>(85);
   const [isSimulatingMrd, setIsSimulatingMrd] = useState<boolean>(false);
   const [mrdSimulationResults, setMrdSimulationResults] = useState<any>(null);
+
+  // Tool 5 State: Micrometastatic Dormancy & Interception Simulator
+  const [dormancyNiche, setDormancyNiche] = useState<'bone_endosteal' | 'hepatic_sinusoid' | 'brain_perivascular'>('bone_endosteal');
+  const [dormancyStrategy, setDormancyStrategy] = useState<'sleep_keep' | 'awaken_kill' | 'continuous_mtd' | 'immune_reinvigorate'>('sleep_keep');
+  const [initialDtcCount, setInitialDtcCount] = useState<number>(1000);
+  const [nicheStromalSupport, setNicheStromalSupport] = useState<number>(75);
+  const [isSimulatingDormancy, setIsSimulatingDormancy] = useState<boolean>(false);
+  const [dormancyResults, setDormancyResults] = useState<any>(null);
 
   // 1. Run Batch Correction Engine
   const handleRunBatchCorrection = async () => {
@@ -212,7 +221,8 @@ export const BottleneckResolverModule: React.FC<BottleneckResolverProps> = ({
       timeline.push({
         month: m,
         ctDnaPpm: Math.round(val * 100) / 100,
-        mrdStatus: val >= lodPpm ? (val >= 10000 ? 'Overt RECIST Relapse' : 'Molecular Relapse') : 'MRD Negative'
+        mrdStatus: val >= lodPpm ? (val >= 10000 ? 'Overt RECIST Relapse' : 'Molecular Relapse') : 'MRD Negative',
+        imagingStatus: val >= 10000 ? 'Lesion Visible on PET/CT (≥1 cm)' : 'No Lesion Visible (CT/MRI Clear)'
       });
     }
     setMrdSimulationResults({
@@ -220,6 +230,89 @@ export const BottleneckResolverModule: React.FC<BottleneckResolverProps> = ({
       trialPowerMetrics: { hazardRatio: 0.38, pValue: 0.0004, statisticalPowerPct: 94.2, recommendedCohortSize: 120 },
       longitudinalTimeline: timeline
     });
+  };
+
+  // 5. Run Micrometastatic Dormancy Escape & Interception Simulator (Tool 5)
+  const handleRunDormancySimulation = () => {
+    setIsSimulatingDormancy(true);
+    setTimeout(() => {
+      const timeline = [];
+      let dormant = initialDtcCount;
+      let active = 0;
+      let cleared = 0;
+      let accumulatedRisk = 0;
+
+      let baseAwakeRate = dormancyNiche === 'bone_endosteal' ? 0.05 : dormancyNiche === 'hepatic_sinusoid' ? 0.12 : 0.08;
+      let baseImmuneClearance = dormancyNiche === 'bone_endosteal' ? 0.02 : dormancyNiche === 'hepatic_sinusoid' ? 0.08 : 0.01;
+
+      const stromalFactor = nicheStromalSupport / 100;
+      baseAwakeRate = baseAwakeRate * (1.5 - stromalFactor);
+
+      for (let m = 0; m <= 36; m += 3) {
+        let awakeRate = baseAwakeRate;
+        let killRate = 0;
+        let immuneClearance = baseImmuneClearance;
+
+        if (dormancyStrategy === 'sleep_keep') {
+          awakeRate = awakeRate * 0.15;
+          killRate = 0.01;
+          immuneClearance = baseImmuneClearance * 1.1;
+        } else if (dormancyStrategy === 'awaken_kill') {
+          awakeRate = awakeRate * 3.5;
+          killRate = 0.65;
+          immuneClearance = baseImmuneClearance * 0.8;
+        } else if (dormancyStrategy === 'continuous_mtd') {
+          awakeRate = awakeRate * (1.0 + (1 - stromalFactor) * 1.2);
+          killRate = 0.40;
+          immuneClearance = baseImmuneClearance * 0.3;
+        } else if (dormancyStrategy === 'immune_reinvigorate') {
+          awakeRate = awakeRate * 1.0;
+          killRate = 0.05;
+          immuneClearance = baseImmuneClearance * 4.5;
+        }
+
+        const newlyAwake = Math.round(dormant * awakeRate);
+        dormant = Math.max(0, dormant - newlyAwake);
+        
+        const activeKilled = Math.round(active * killRate);
+        const activeCleared = Math.round(active * immuneClearance);
+        const dormantCleared = Math.round(dormant * (immuneClearance * 0.1));
+
+        cleared += (activeCleared + dormantCleared + activeKilled);
+        
+        const growthFactor = dormancyNiche === 'hepatic_sinusoid' ? 1.4 : 1.2;
+        active = Math.max(0, Math.round((active + newlyAwake - activeKilled - activeCleared) * (active > 0 ? growthFactor : 1)));
+        
+        dormant = Math.max(0, dormant - dormantCleared);
+
+        accumulatedRisk = Math.min(100, Math.round((active / (active + dormant + cleared + 1)) * 100 * (m / 12)));
+        if (active > 1500) accumulatedRisk = 100;
+
+        timeline.push({
+          month: m,
+          dormantCount: Math.round(dormant),
+          activeCount: Math.round(active),
+          clearedCount: Math.round(cleared),
+          relapseRisk: Math.round(accumulatedRisk)
+        });
+      }
+
+      const optimalNicheMatch = 
+        dormancyNiche === 'bone_endosteal' ? 'CXCR4-CXCL12 & Osteopontin Axis' :
+        dormancyNiche === 'hepatic_sinusoid' ? 'Hepatic Stellate Cell & TGFβ-dependent Quiescence' :
+        'L1CAM Adhesion & Astrocytic Sheaths (Blood-Brain Barrier Protection)';
+
+      setDormancyResults({
+        optimalRegimenAction: 
+          dormancyStrategy === 'sleep_keep' ? 'Preserve Dormancy via BMP4/TGFβ Agonism. Restrict osteoclast resorption.' :
+          dormancyStrategy === 'awaken_kill' ? 'Pulsed Chemo post G-CSF/RANKL recruitment. Risk of rapid relapse if clonal resistance pre-exists.' :
+          dormancyStrategy === 'continuous_mtd' ? 'High Risk of Recurrence! Chemotherapy damages vascular stroma, triggering systemic inflammatory awakening of DTCs.' :
+          'Immunological clearance of dormant niches. Combine with checkpoint blockade to wipe out G0 cells.',
+        molecularMechanisms: optimalNicheMatch,
+        longitudinalTimeline: timeline
+      });
+      setIsSimulatingDormancy(false);
+    }, 400);
   };
 
   return (
@@ -241,7 +334,7 @@ export const BottleneckResolverModule: React.FC<BottleneckResolverProps> = ({
             </h2>
             <p className="text-sm text-slate-300 mt-1 max-w-3xl">
               Execute active algorithms to correct batch effects, recover dissociation-lost stromal cells, 
-              match preclinical organotropic models, extract paired drivers, and simulate ctDNA trial lead-times.
+              match preclinical models, extract paired drivers, simulate ctDNA trial lead-times, and model micrometastatic dormancy escape.
             </p>
           </div>
 
@@ -290,6 +383,17 @@ export const BottleneckResolverModule: React.FC<BottleneckResolverProps> = ({
             >
               <Activity className="w-3.5 h-3.5 text-rose-300" />
               4. ctDNA Trial Lead-Time Simulator
+            </button>
+            <button
+              onClick={() => setActiveTab('dormancy_interception')}
+              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all flex items-center gap-1.5 ${
+                activeTab === 'dormancy_interception'
+                  ? 'bg-cyan-600 text-white shadow'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800'
+              }`}
+            >
+              <Clock className="w-3.5 h-3.5 text-cyan-300" />
+              5. Dormancy & Escape Interceptor
             </button>
           </div>
         </div>
@@ -726,48 +830,39 @@ export const BottleneckResolverModule: React.FC<BottleneckResolverProps> = ({
               <h4 className="font-bold text-slate-200 uppercase tracking-wider text-[11px]">Simulation Control Parameters</h4>
 
               <div>
-                <div className="flex justify-between mb-1">
-                  <span className="text-slate-400">Assay Limit of Detection (LOD):</span>
-                  <span className="font-mono text-cyan-300 font-bold">{lodPpm} PPM</span>
-                </div>
-                <input
-                  type="range"
-                  min="1"
-                  max="500"
+                <Slider
+                  label="Assay Limit of Detection (LOD):"
+                  min={1}
+                  max={500}
+                  step={1}
                   value={lodPpm}
-                  onChange={(e) => setLodPpm(Number(e.target.value))}
-                  className="w-full accent-cyan-500"
+                  onChange={(val) => setLodPpm(val)}
+                  valueDisplay={`${lodPpm} PPM`}
                 />
                 <span className="text-[10px] text-slate-400 block mt-0.5">1 PPM = Ultra-deep Phased Multi-Mutation Assay</span>
               </div>
 
               <div>
-                <div className="flex justify-between mb-1">
-                  <span className="text-slate-400">Tumor Doubling Time:</span>
-                  <span className="font-mono text-amber-300 font-bold">{doublingDays} Days</span>
-                </div>
-                <input
-                  type="range"
-                  min="20"
-                  max="120"
+                <Slider
+                  label="Tumor Doubling Time:"
+                  min={20}
+                  max={120}
+                  step={1}
                   value={doublingDays}
-                  onChange={(e) => setDoublingDays(Number(e.target.value))}
-                  className="w-full accent-amber-500"
+                  onChange={(val) => setDoublingDays(val)}
+                  valueDisplay={`${doublingDays} Days`}
                 />
               </div>
 
               <div>
-                <div className="flex justify-between mb-1">
-                  <span className="text-slate-400">Early Intervention Start:</span>
-                  <span className="font-mono text-emerald-400 font-bold">Month {interventionMonth}</span>
-                </div>
-                <input
-                  type="range"
-                  min="2"
-                  max="18"
+                <Slider
+                  label="Early Intervention Start:"
+                  min={2}
+                  max={18}
+                  step={1}
                   value={interventionMonth}
-                  onChange={(e) => setInterventionMonth(Number(e.target.value))}
-                  className="w-full accent-emerald-500"
+                  onChange={(val) => setInterventionMonth(val)}
+                  valueDisplay={`Month ${interventionMonth}`}
                 />
               </div>
 
@@ -845,6 +940,156 @@ export const BottleneckResolverModule: React.FC<BottleneckResolverProps> = ({
                 <div className="bg-slate-950 p-12 rounded-xl border border-slate-800 text-center text-slate-400 text-xs space-y-2">
                   <Activity className="w-8 h-8 text-rose-500/50 mx-auto" />
                   <p>Adjust parameters and click "Run Trial Lead-Time Simulation".</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TOOL 5: MICROMETASTATIC DORMANCY ESCAPE & INTERCEPTION SIMULATOR */}
+      {activeTab === 'dormancy_interception' && (
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 space-y-6">
+          <div className="border-b border-slate-800 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h3 className="text-base font-bold text-white flex items-center gap-2">
+                <Clock className="w-4 h-4 text-cyan-300" />
+                Tool 5: Micrometastatic Dormancy Escape & Evolutionary Interception Simulator
+              </h3>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Solves clinical hurdles regarding quiescent DTCs in metastatic niches that resist chemotherapy and trigger recurrence.
+              </p>
+            </div>
+            <span className="px-2.5 py-1 rounded bg-cyan-950/80 border border-cyan-800/80 text-cyan-300 font-mono text-xs">
+              Dormancy Intercept Engine
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Input Form */}
+            <div className="space-y-4 bg-slate-950 p-4 rounded-xl border border-slate-800 text-xs">
+              <h4 className="font-bold text-slate-200 uppercase tracking-wider text-[11px]">Niche & Treatment Strategy</h4>
+
+              <div>
+                <label className="text-slate-400 block mb-1">Target Microenvironment Niche:</label>
+                <select
+                  value={dormancyNiche}
+                  onChange={(e) => setDormancyNiche(e.target.value as any)}
+                  className="w-full bg-slate-900 border border-slate-700 text-slate-200 rounded p-2"
+                >
+                  <option value="bone_endosteal">Bone Marrow Endosteal Niche (CXCL12/CXCR4-rich)</option>
+                  <option value="hepatic_sinusoid">Hepatic Sinusoid Niche (TGFβ & HSC-mediated)</option>
+                  <option value="brain_perivascular">Brain Perivascular Space (L1CAM-mediated Adhesion)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-slate-400 block mb-1">Interception Strategy:</label>
+                <select
+                  value={dormancyStrategy}
+                  onChange={(e) => setDormancyStrategy(e.target.value as any)}
+                  className="w-full bg-slate-900 border border-slate-700 text-cyan-300 font-mono rounded p-2"
+                >
+                  <option value="sleep_keep">"Sleep-and-Keep" (Preserve G0 Quiescence)</option>
+                  <option value="awaken_kill">"Awaken-and-Kill" (Chemosensitize G0 to G1/S)</option>
+                  <option value="continuous_mtd">Continuous Chemotherapy (Max Tolerated Dose)</option>
+                  <option value="immune_reinvigorate">"Immune-Reinvigoration" (Checkpoint Clearance)</option>
+                </select>
+              </div>
+
+              <div>
+                <Slider
+                  label="Initial Dormant DTC Load (G0):"
+                  min={100}
+                  max={5000}
+                  step={100}
+                  value={initialDtcCount}
+                  onChange={(val) => setInitialDtcCount(val)}
+                  valueDisplay={`${initialDtcCount} Cells`}
+                />
+              </div>
+
+              <div>
+                <Slider
+                  label="Niche Stromal Protection:"
+                  min={10}
+                  max={100}
+                  step={5}
+                  value={nicheStromalSupport}
+                  onChange={(val) => setNicheStromalSupport(val)}
+                  valueDisplay={`${nicheStromalSupport}%`}
+                />
+              </div>
+
+              <button
+                onClick={handleRunDormancySimulation}
+                disabled={isSimulatingDormancy}
+                className="w-full py-2.5 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-lg text-xs transition-all shadow-lg flex items-center justify-center gap-2 mt-4"
+              >
+                {isSimulatingDormancy ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4 fill-current" />}
+                Simulate Dormancy Escape Kinetics
+              </button>
+            </div>
+
+            {/* Simulation Results Output */}
+            <div className="lg:col-span-2 space-y-4">
+              {dormancyResults ? (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    <div className="bg-slate-950 p-4 rounded-xl border border-slate-800">
+                      <span className="text-[10px] font-mono text-slate-500 uppercase block mb-1">Key Molecular Axis Modeled</span>
+                      <span className="text-xs font-bold text-cyan-300 block">{dormancyResults.molecularMechanisms}</span>
+                    </div>
+
+                    <div className="bg-slate-950 p-4 rounded-xl border border-slate-800">
+                      <span className="text-[10px] font-mono text-slate-500 uppercase block mb-1">Recommended Regimen Action</span>
+                      <span className="text-xs font-bold text-emerald-400 block">{dormancyResults.optimalRegimenAction}</span>
+                    </div>
+                  </div>
+
+                  {/* Simulated Longitudinal DTC Niche Status */}
+                  <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2 text-xs">
+                    <h5 className="font-bold text-slate-200">Longitudinal DTC Niche Kinetics & Relapse Probability</h5>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left border-collapse">
+                        <thead>
+                          <tr className="border-b border-slate-800 text-slate-400 text-[11px]">
+                            <th className="py-2">Follow-up</th>
+                            <th className="py-2">Dormant DTCs (G0)</th>
+                            <th className="py-2">Proliferating Cells</th>
+                            <th className="py-2">Immune Cleared</th>
+                            <th className="py-2">Relapse Risk (%)</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-800/60">
+                          {dormancyResults.longitudinalTimeline.map((pt: any) => (
+                            <tr key={pt.month} className="hover:bg-slate-900/40">
+                              <td className="py-2 font-mono text-slate-300">Month {pt.month}</td>
+                              <td className="py-2 font-mono text-cyan-400">{pt.dormantCount} Cells</td>
+                              <td className="py-2 font-mono text-rose-400 font-bold">{pt.activeCount} Cells</td>
+                              <td className="py-2 font-mono text-emerald-500">{pt.clearedCount} Cells</td>
+                              <td className="py-2">
+                                <span className={`px-2 py-0.5 rounded font-mono text-[10px] ${
+                                  pt.relapseRisk < 20 
+                                    ? 'bg-emerald-950 text-emerald-300 border border-emerald-800' 
+                                    : pt.relapseRisk < 60 
+                                      ? 'bg-amber-950 text-amber-300 border border-amber-800' 
+                                      : 'bg-rose-950 text-rose-300 border border-rose-800'
+                                }`}>
+                                  {pt.relapseRisk}% Risk
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-slate-950 p-12 rounded-xl border border-slate-800 text-center text-slate-400 text-xs space-y-2">
+                  <Clock className="w-8 h-8 text-cyan-500/50 mx-auto" />
+                  <p>Choose your niche and select "Simulate Dormancy Escape Kinetics" to forecast escape and clearance dynamics.</p>
                 </div>
               )}
             </div>

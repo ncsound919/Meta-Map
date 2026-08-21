@@ -162,7 +162,7 @@ export const ImmuneEscapeMechanisms: React.FC = () => {
           {RESISTANCE_PATHWAYS.map((pathway) => {
             const isSelected = selectedPathwayId === pathway.id;
             return (
-              <button
+              <button type="button"
                 key={pathway.id}
                 onClick={() => {
                   setSelectedPathwayId(pathway.id);
@@ -293,7 +293,7 @@ export const ImmuneEscapeMechanisms: React.FC = () => {
                 {currentPathway.approvedOrTrialDrugs.map((drug) => {
                   const isActive = appliedInterventions.includes(drug);
                   return (
-                    <button
+                    <button type="button"
                       key={drug}
                       onClick={() => handleToggleDrug(drug)}
                       className={`w-full p-2.5 rounded-xl border text-left font-mono text-xs flex items-center justify-between transition-all ${

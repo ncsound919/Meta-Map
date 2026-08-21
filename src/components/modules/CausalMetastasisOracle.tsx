@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
+import { Slider } from "../ui/Slider";
 import { OrganSite, PrimaryCancerType } from '../../types/metastasis';
 import {
   HelpCircle,
@@ -299,21 +300,17 @@ export const CausalMetastasisOracle: React.FC<CausalMetastasisOracleProps> = ({
           </div>
 
           {/* Inversion Intensity Slider */}
-          <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-2 text-xs">
-            <div className="flex justify-between items-center">
-              <label className="text-slate-300 font-bold">Rule Inversion Intensity:</label>
-              <span className="font-mono text-amber-300 font-bold">{inversionIntensity}%</span>
-            </div>
-            <input
-              type="range"
-              min="0"
-              max="100"
-              step="5"
+          <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-1 text-xs">
+            <Slider
+              label="Rule Inversion Intensity:"
+              min={0}
+              max={100}
+              step={5}
               value={inversionIntensity}
-              onChange={(e) => setInversionIntensity(Number(e.target.value))}
-              className="w-full accent-amber-500 bg-slate-800 h-2 rounded-lg cursor-pointer"
+              onChange={(val) => setInversionIntensity(val)}
+              valueDisplay={`${inversionIntensity}%`}
             />
-            <p className="text-[10px] text-slate-500">
+            <p className="text-[10px] text-slate-500 pt-1">
               0% = Natural Biological Rule | 100% = Complete Constraint Ablation
             </p>
           </div>

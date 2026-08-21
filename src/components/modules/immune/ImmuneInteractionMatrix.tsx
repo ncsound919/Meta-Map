@@ -2,15 +2,12 @@ import React, { useState } from 'react';
 import {
   Shield,
   Zap,
-  Activity,
-  ArrowRight,
-  Flame,
-  CheckCircle2,
-  AlertCircle,
-  HelpCircle,
   Sparkles,
   Info,
-  Maximize2
+  Swords,
+  Plus,
+  Ban,
+  RefreshCw
 } from 'lucide-react';
 
 export interface ImmuneNode {
@@ -33,6 +30,8 @@ export interface InteractionEdge {
   checkpointTarget?: string;
   mechanism: string;
 }
+
+export type CategoryFilter = 'all' | ImmuneNode['category'];
 
 export const IMMUNE_NODES: ImmuneNode[] = [
   {
@@ -231,22 +230,119 @@ export const INTERACTION_EDGES: InteractionEdge[] = [
   }
 ];
 
+export const findEdge = (sourceId: string, targetId: string): InteractionEdge | undefined =>
+  INTERACTION_EDGES.find((e) => e.from === sourceId && e.to === targetId);
+
+interface EdgeInspectorProps {
+  source: ImmuneNode;
+  target: ImmuneNode;
+  edge?: InteractionEdge;
+}
+
+const EdgeInspector: React.FC<EdgeInspectorProps> = ({ source, target, edge }) => {
+  return (
+    <div className="space-y-3">
+      <div className="grid grid-cols-2 gap-2">
+        <div className={`p-3 rounded-xl border ${source.bgColor} space-y-1`}>
+          <span className="text-[10px] font-mono text-slate-400 uppercase">Source Entity</span>
+          <div className={`font-bold text-xs ${source.color}`}>{source.name}</div>
+          <div className="text-[10px] font-mono text-slate-400">{source.marker}</div>
+        </div>
+
+        <div className={`p-3 rounded-xl border ${target.bgColor} space-y-1`}>
+          <span className="text-[10px] font-mono text-slate-400 uppercase">Target Entity</span>
+          <div className={`font-bold text-xs ${target.color}`}>{target.name}</div>
+          <div className="text-[10px] font-mono text-slate-400">{target.marker}</div>
+        </div>
+      </div>
+
+      {/* Edge Details */}
+      {edge ? (
+        <div className="p-4 bg-slate-950 rounded-xl border border-slate-800 space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-mono text-slate-400">Interaction Mode:</span>
+            <span className={`text-xs font-mono font-bold px-2 py-0.5 rounded ${
+              edge.effect === 'kill' ? 'bg-rose-950 text-rose-300 border border-rose-800' :
+              edge.effect === 'activate' ? 'bg-emerald-950 text-emerald-300 border border-emerald-800' :
+              edge.effect === 'inhibit' ? 'bg-amber-950 text-amber-300 border border-amber-800' :
+              'bg-purple-950 text-purple-300 border border-purple-800'
+            }`}>
+              {edge.effect.toUpperCase()}
+            </span>
+          </div>
+
+          <div className="space-y-1">
+            <span className="text-[10px] font-mono text-slate-400 block">PRIMARY CYTOKINE / LIGAND MEDIATORS</span>
+            <div className="text-xs font-mono text-cyan-300 bg-slate-900 p-2 rounded-lg border border-slate-800">
+              {edge.mediator}
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <span className="text-[10px] font-mono text-slate-400 block">CLINICAL CHECKPOINT / DRUG TARGET</span>
+            <div className="text-xs font-mono text-amber-300 bg-slate-900 p-2 rounded-lg border border-slate-800 flex items-center justify-between">
+              <span>{edge.checkpointTarget || 'N/A'}</span>
+              <span className="text-[10px] text-slate-400">({edge.reversibility})</span>
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <span className="text-[10px] font-mono text-slate-400 block">BIOPHYSICAL & SIGNALING MECHANISM</span>
+            <p className="text-xs text-slate-300 leading-relaxed bg-slate-900 p-2.5 rounded-lg border border-slate-800">
+              {edge.mechanism}
+            </p>
+          </div>
+
+          {/* Relative Interaction Potency Meter */}
+          <div className="pt-2 border-t border-slate-800 space-y-1">
+            <div className="flex justify-between text-xs font-mono">
+              <span className="text-slate-400">Relative Flux Coefficient:</span>
+              <span className="text-cyan-400 font-bold">{edge.strength > 0 ? `+${edge.strength}` : edge.strength}</span>
+            </div>
+            <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+              <div
+                className={`h-full rounded-full ${
+                  edge.strength > 0 ? 'bg-emerald-500' : 'bg-rose-500'
+                }`}
+                style={{ width: `${Math.abs(edge.strength) * 100}%` }}
+              />
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="p-6 bg-slate-950 rounded-xl border border-slate-800 text-center space-y-2">
+          <Info className="w-6 h-6 text-slate-500 mx-auto" />
+          <p className="text-xs text-slate-400">
+            No direct primary signaling axis mapped between <strong className="text-slate-200">{source.name}</strong> and <strong className="text-slate-200">{target.name}</strong>.
+          </p>
+          <p className="text-[11px] text-slate-500">
+            Select cells with active interaction badges (+ Stim, ⊣ Block, ⚔ Lysis, or ↻ Polarize) in the grid to view signaling cascades.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+};
+
 export const ImmuneInteractionMatrix: React.FC = () => {
   const [selectedSource, setSelectedSource] = useState<string>('cd8_tcell');
   const [selectedTarget, setSelectedTarget] = useState<string>('tumor_cell');
-  const [filterCategory, setFilterCategory] = useState<string>('all');
+  const [filterCategory, setFilterCategory] = useState<CategoryFilter>('all');
 
-  const selectedEdge = INTERACTION_EDGES.find(
-    (e) => e.from === selectedSource && e.to === selectedTarget
-  );
-
-  const getEdge = (sourceId: string, targetId: string) => {
-    return INTERACTION_EDGES.find((e) => e.from === sourceId && e.to === targetId);
-  };
+  const selectedEdge = findEdge(selectedSource, selectedTarget);
 
   const filteredNodes = filterCategory === 'all'
     ? IMMUNE_NODES
     : IMMUNE_NODES.filter((n) => n.category === filterCategory);
+
+  const selectedSourceNode = IMMUNE_NODES.find((n) => n.id === selectedSource);
+  const selectedTargetNode = IMMUNE_NODES.find((n) => n.id === selectedTarget);
+
+  const selectionVisible =
+    filteredNodes.some((n) => n.id === selectedSource) &&
+    filteredNodes.some((n) => n.id === selectedTarget);
+
+  const categories: CategoryFilter[] = ['all', 'effector', 'suppressor', 'myeloid', 'stroma', 'tumor'];
 
   return (
     <div className="space-y-6">
@@ -276,9 +372,10 @@ export const ImmuneInteractionMatrix: React.FC = () => {
         {/* Category Filters */}
         <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-800">
           <span className="text-xs font-mono text-slate-400">Filter Nodes:</span>
-          {['all', 'effector', 'suppressor', 'myeloid', 'stroma', 'tumor'].map((cat) => (
+          {categories.map((cat) => (
             <button
               key={cat}
+              type="button"
               onClick={() => setFilterCategory(cat)}
               className={`px-2.5 py-1 rounded-lg text-xs font-mono capitalize transition-all ${
                 filterCategory === cat
@@ -291,6 +388,20 @@ export const ImmuneInteractionMatrix: React.FC = () => {
           ))}
         </div>
       </div>
+
+      {/* Selection Filter Notice */}
+      {!selectionVisible && (
+        <div className="p-3 bg-amber-950/30 border border-amber-800/60 rounded-xl text-xs text-amber-300 font-mono flex items-center justify-between">
+          <span>Current selection is hidden by the active category filter ({filterCategory}).</span>
+          <button
+            type="button"
+            onClick={() => setFilterCategory('all')}
+            className="text-[11px] underline hover:text-amber-100 font-semibold"
+          >
+            Reset filter to show all
+          </button>
+        </div>
+      )}
 
       {/* 2-Column: Matrix Grid & Detailed Edge Inspector */}
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
@@ -308,9 +419,13 @@ export const ImmuneInteractionMatrix: React.FC = () => {
             <table className="w-full text-center border-collapse">
               <thead>
                 <tr>
-                  <th className="p-2 text-left text-[10px] font-mono text-slate-500">Source \ Target</th>
+                  <th scope="col" className="p-2 text-left text-[10px] font-mono text-slate-500">Source \ Target</th>
                   {filteredNodes.map((target) => (
-                    <th key={target.id} className="p-1.5 text-[9px] font-mono text-slate-400 max-w-[65px] truncate">
+                    <th
+                      key={target.id}
+                      scope="col"
+                      className="p-1.5 text-[9px] font-mono text-slate-400 max-w-[65px] truncate whitespace-nowrap overflow-hidden text-ellipsis"
+                    >
                       {target.name.split(' ')[0]}
                     </th>
                   ))}
@@ -319,46 +434,54 @@ export const ImmuneInteractionMatrix: React.FC = () => {
               <tbody>
                 {filteredNodes.map((source) => (
                   <tr key={source.id} className="border-t border-slate-800/60">
-                    <td className="p-2 text-left text-[10px] font-mono font-bold text-slate-300 whitespace-nowrap">
+                    <th scope="row" className="p-2 text-left text-[10px] font-mono font-bold text-slate-300 whitespace-nowrap font-normal">
                       <span className={`inline-block w-2 h-2 rounded-full mr-1.5 ${source.color.replace('text-', 'bg-')}`}></span>
                       {source.name}
-                    </td>
+                    </th>
 
                     {filteredNodes.map((target) => {
-                      const edge = getEdge(source.id, target.id);
+                      const edge = findEdge(source.id, target.id);
                       const isSelected = selectedSource === source.id && selectedTarget === target.id;
 
                       let cellBg = 'bg-slate-900/40 text-slate-600 hover:bg-slate-800/80';
-                      let cellIcon = '—';
+                      let cellIcon: React.ReactNode = <span className="opacity-30">—</span>;
 
                       if (source.id === target.id) {
                         cellBg = 'bg-slate-950 text-slate-700';
-                        cellIcon = '•';
+                        cellIcon = <span className="opacity-50">•</span>;
                       } else if (edge) {
                         if (edge.effect === 'kill') {
-                          cellBg = 'bg-rose-500/20 text-rose-400 border border-rose-500/40 font-bold hover:bg-rose-500/40';
-                          cellIcon = '⚔ Lysis';
+                          cellBg = 'bg-rose-500/20 text-rose-400 border border-rose-500/40 hover:bg-rose-500/40 hover:text-white';
+                          cellIcon = <Swords className="w-3.5 h-3.5 mx-auto" strokeWidth={2.5} />;
                         } else if (edge.effect === 'activate') {
-                          cellBg = 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold hover:bg-emerald-500/40';
-                          cellIcon = '+ Stim';
+                          cellBg = 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 hover:bg-emerald-500/40 hover:text-white';
+                          cellIcon = <Plus className="w-3.5 h-3.5 mx-auto" strokeWidth={3} />;
                         } else if (edge.effect === 'inhibit') {
-                          cellBg = 'bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold hover:bg-amber-500/40';
-                          cellIcon = '⊣ Block';
+                          cellBg = 'bg-amber-500/20 text-amber-400 border border-amber-500/40 hover:bg-amber-500/40 hover:text-white';
+                          cellIcon = <Ban className="w-3.5 h-3.5 mx-auto" strokeWidth={2.5} />;
                         } else if (edge.effect === 'convert') {
-                          cellBg = 'bg-purple-500/20 text-purple-300 border border-purple-500/40 font-bold hover:bg-purple-500/40';
-                          cellIcon = '↻ Polarize';
+                          cellBg = 'bg-purple-500/20 text-purple-400 border border-purple-500/40 hover:bg-purple-500/40 hover:text-white';
+                          cellIcon = <RefreshCw className="w-3.5 h-3.5 mx-auto" strokeWidth={2.5} />;
                         }
                       }
 
                       return (
                         <td key={target.id} className="p-1">
                           <button
+                            type="button"
                             onClick={() => {
                               setSelectedSource(source.id);
                               setSelectedTarget(target.id);
                             }}
+                            aria-current={isSelected ? 'true' : undefined}
+                            aria-label={`${source.name} to ${target.name}: ${
+                              edge ? edge.effect : 'no direct interaction'
+                            }`}
+                            title={`${source.name} → ${target.name}${
+                              edge ? ` — ${edge.mediator}` : ' — no mapped direct axis'
+                            }`}
                             className={`w-full py-2 px-1 rounded-lg text-[10px] font-mono transition-all ${cellBg} ${
-                              isSelected ? 'ring-2 ring-cyan-400 shadow-lg scale-105 z-10' : ''
+                              isSelected ? 'relative ring-2 ring-cyan-400 shadow-lg scale-105 z-10' : ''
                             }`}
                           >
                             {cellIcon}
@@ -373,18 +496,18 @@ export const ImmuneInteractionMatrix: React.FC = () => {
           </div>
 
           {/* Matrix Legend */}
-          <div className="flex flex-wrap items-center justify-between gap-3 text-[11px] font-mono text-slate-400 pt-2 border-t border-slate-800">
-            <span className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded bg-rose-500/40 border border-rose-500"></span> Cytotoxic Lysis (Kill)
+          <div className="flex flex-wrap items-center justify-between gap-3 text-[11px] font-mono text-slate-400 pt-3 border-t border-slate-800">
+            <span className="flex items-center gap-1.5 px-2 py-1 rounded bg-slate-950 border border-slate-800">
+              <Swords className="w-3.5 h-3.5 text-rose-400" strokeWidth={2.5} /> Lysis (Kill)
             </span>
-            <span className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded bg-emerald-500/40 border border-emerald-500"></span> Priming / Activation (+)
+            <span className="flex items-center gap-1.5 px-2 py-1 rounded bg-slate-950 border border-slate-800">
+              <Plus className="w-3.5 h-3.5 text-emerald-400" strokeWidth={3} /> Priming (+)
             </span>
-            <span className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded bg-amber-500/40 border border-amber-500"></span> Checkpoint Inhibition (⊣)
+            <span className="flex items-center gap-1.5 px-2 py-1 rounded bg-slate-950 border border-slate-800">
+              <Ban className="w-3.5 h-3.5 text-amber-400" strokeWidth={2.5} /> Inhibition (Block)
             </span>
-            <span className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded bg-purple-500/40 border border-purple-500"></span> Phenotypic Polarization (↻)
+            <span className="flex items-center gap-1.5 px-2 py-1 rounded bg-slate-950 border border-slate-800">
+              <RefreshCw className="w-3.5 h-3.5 text-purple-400" strokeWidth={2.5} /> Polarization
             </span>
           </div>
         </div>
@@ -401,96 +524,14 @@ export const ImmuneInteractionMatrix: React.FC = () => {
             </span>
           </div>
 
-          {/* Source & Target Nodes Display */}
-          {(() => {
-            const srcNode = IMMUNE_NODES.find((n) => n.id === selectedSource);
-            const tgtNode = IMMUNE_NODES.find((n) => n.id === selectedTarget);
-
-            if (!srcNode || !tgtNode) return null;
-
-            return (
-              <div className="space-y-3">
-                <div className="grid grid-cols-2 gap-2">
-                  <div className={`p-3 rounded-xl border ${srcNode.bgColor} space-y-1`}>
-                    <span className="text-[10px] font-mono text-slate-400 uppercase">Source Entity</span>
-                    <div className={`font-bold text-xs ${srcNode.color}`}>{srcNode.name}</div>
-                    <div className="text-[10px] font-mono text-slate-400">{srcNode.marker}</div>
-                  </div>
-
-                  <div className={`p-3 rounded-xl border ${tgtNode.bgColor} space-y-1`}>
-                    <span className="text-[10px] font-mono text-slate-400 uppercase">Target Entity</span>
-                    <div className={`font-bold text-xs ${tgtNode.color}`}>{tgtNode.name}</div>
-                    <div className="text-[10px] font-mono text-slate-400">{tgtNode.marker}</div>
-                  </div>
-                </div>
-
-                {/* Edge Details */}
-                {selectedEdge ? (
-                  <div className="p-4 bg-slate-950 rounded-xl border border-slate-800 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-mono text-slate-400">Interaction Mode:</span>
-                      <span className={`text-xs font-mono font-bold px-2 py-0.5 rounded ${
-                        selectedEdge.effect === 'kill' ? 'bg-rose-950 text-rose-300 border border-rose-800' :
-                        selectedEdge.effect === 'activate' ? 'bg-emerald-950 text-emerald-300 border border-emerald-800' :
-                        selectedEdge.effect === 'inhibit' ? 'bg-amber-950 text-amber-300 border border-amber-800' :
-                        'bg-purple-950 text-purple-300 border border-purple-800'
-                      }`}>
-                        {selectedEdge.effect.toUpperCase()}
-                      </span>
-                    </div>
-
-                    <div className="space-y-1">
-                      <span className="text-[10px] font-mono text-slate-400 block">PRIMARY CYTOKINE / LIGAND MEDIATORS</span>
-                      <div className="text-xs font-mono text-cyan-300 bg-slate-900 p-2 rounded-lg border border-slate-800">
-                        {selectedEdge.mediator}
-                      </div>
-                    </div>
-
-                    <div className="space-y-1">
-                      <span className="text-[10px] font-mono text-slate-400 block">CLINICAL CHECKPOINT / DRUG TARGET</span>
-                      <div className="text-xs font-mono text-amber-300 bg-slate-900 p-2 rounded-lg border border-slate-800 flex items-center justify-between">
-                        <span>{selectedEdge.checkpointTarget || 'N/A'}</span>
-                        <span className="text-[10px] text-slate-400">({selectedEdge.reversibility})</span>
-                      </div>
-                    </div>
-
-                    <div className="space-y-1">
-                      <span className="text-[10px] font-mono text-slate-400 block">BIOPHYSICAL & SIGNALING MECHANISM</span>
-                      <p className="text-xs text-slate-300 leading-relaxed bg-slate-900 p-2.5 rounded-lg border border-slate-800">
-                        {selectedEdge.mechanism}
-                      </p>
-                    </div>
-
-                    {/* Relative Interaction Potency Meter */}
-                    <div className="pt-2 border-t border-slate-800 space-y-1">
-                      <div className="flex justify-between text-xs font-mono">
-                        <span className="text-slate-400">Relative Flux Coefficient:</span>
-                        <span className="text-cyan-400 font-bold">{selectedEdge.strength > 0 ? `+${selectedEdge.strength}` : selectedEdge.strength}</span>
-                      </div>
-                      <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
-                        <div
-                          className={`h-full rounded-full ${
-                            selectedEdge.strength > 0 ? 'bg-emerald-500' : 'bg-rose-500'
-                          }`}
-                          style={{ width: `${Math.abs(selectedEdge.strength) * 100}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="p-6 bg-slate-950 rounded-xl border border-slate-800 text-center space-y-2">
-                    <Info className="w-6 h-6 text-slate-500 mx-auto" />
-                    <p className="text-xs text-slate-400">
-                      No direct primary signaling axis mapped between <strong className="text-slate-200">{srcNode.name}</strong> and <strong className="text-slate-200">{tgtNode.name}</strong>.
-                    </p>
-                    <p className="text-[11px] text-slate-500">
-                      Select cells with active interaction badges (+ Stim, ⊣ Block, ⚔ Lysis, or ↻ Polarize) in the grid to view signaling cascades.
-                    </p>
-                  </div>
-                )}
-              </div>
-            );
-          })()}
+          {/* Extracted EdgeInspector Component */}
+          {selectedSourceNode && selectedTargetNode && (
+            <EdgeInspector
+              source={selectedSourceNode}
+              target={selectedTargetNode}
+              edge={selectedEdge}
+            />
+          )}
         </div>
       </div>
     </div>

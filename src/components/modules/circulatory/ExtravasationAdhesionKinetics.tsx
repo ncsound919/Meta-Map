@@ -1,4 +1,6 @@
 import React, { useState, useMemo } from 'react';
+import { Slider } from '../../ui/Slider';
+
 import {
   Zap,
   Activity,
@@ -206,49 +208,19 @@ export const ExtravasationAdhesionKinetics: React.FC = () => {
 
           <div className="space-y-3.5">
             {/* Wall Shear Stress */}
-            <div className="space-y-1">
-              <div className="flex justify-between text-xs font-mono">
-                <span className="text-slate-300">Vessel Wall Shear Stress (τ):</span>
-                <span className="text-amber-400 font-bold">{wallShearStressDyn} dyn/cm²</span>
-              </div>
-              <input
-                type="range"
-                min="0.5"
-                max="15.0"
-                step="0.25"
-                value={wallShearStressDyn}
-                onChange={(e) => setWallShearStressDyn(Number(e.target.value))}
-                className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-amber-400"
-              />
-              <div className="flex justify-between text-[10px] text-slate-500 font-mono">
-                <span>Venule (1–4 dyn)</span>
-                <span>Capillary (5–10 dyn)</span>
-                <span>Arteriole (15+ dyn)</span>
-              </div>
-            </div>
-
-            {/* E-Selectin Endothelial Density */}
-            <div className="space-y-1">
-              <div className="flex justify-between text-xs font-mono">
-                <span className="text-slate-300">Endothelial E-Selectin Density:</span>
-                <span className="text-cyan-400 font-bold">{eSelectinDensity}%</span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={eSelectinDensity}
-                onChange={(e) => setESelectinDensity(Number(e.target.value))}
-                className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-400"
-              />
-            </div>
+            <Slider
+  label="Vessel Wall Shear Stress (τ):"
+  min={0.5}
+  max={15.0}
+  step={0.25}
+  value={wallShearStressDyn}
+  onChange={setWallShearStressDyn}
+  valueDisplay={<>{wallShearStressDyn} dyn/cm²</>}
+/>
 
             {/* Integrin Affinity State */}
             <div className="space-y-1">
-              <div className="flex justify-between text-xs font-mono">
-                <span className="text-slate-300">Integrin Affinity State (α4β1 / αvβ3):</span>
-                <span className="text-purple-400 font-bold uppercase">{integrinAffinityState.replace('_', ' ')}</span>
-              </div>
+              <label className="text-xs text-slate-300 block">Integrin Affinity State (α4β1 / αvβ3):</label>
               <div className="grid grid-cols-3 gap-1.5">
                 {(['low', 'intermediate', 'high_active'] as const).map((state) => (
                   <button
@@ -268,17 +240,14 @@ export const ExtravasationAdhesionKinetics: React.FC = () => {
 
             {/* VE-Cadherin Junction Integrity */}
             <div className="space-y-1">
-              <div className="flex justify-between text-xs font-mono">
-                <span className="text-slate-300">VE-Cadherin Junction Integrity (Barrier Tightness):</span>
-                <span className="text-emerald-400 font-bold">{veCadherinIntegrity}%</span>
-              </div>
-              <input
-                type="range"
-                min="5"
-                max="100"
+              <Slider
+                label="VE-Cadherin Junction Integrity (Barrier Tightness):"
+                min={5}
+                max={100}
+                step={1}
                 value={veCadherinIntegrity}
-                onChange={(e) => setVeCadherinIntegrity(Number(e.target.value))}
-                className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-400"
+                onChange={setVeCadherinIntegrity}
+                valueDisplay={<>{veCadherinIntegrity}%</>}
               />
               <div className="flex justify-between text-[10px] text-slate-500 font-mono">
                 <span>Leaky / Disassembled</span>
@@ -287,20 +256,15 @@ export const ExtravasationAdhesionKinetics: React.FC = () => {
             </div>
 
             {/* MMP Activity */}
-            <div className="space-y-1">
-              <div className="flex justify-between text-xs font-mono">
-                <span className="text-slate-300">MMP-2 / MMP-9 Secretion Level:</span>
-                <span className="text-rose-400 font-bold">{mmpSecretionLevel}%</span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={mmpSecretionLevel}
-                onChange={(e) => setMmpSecretionLevel(Number(e.target.value))}
-                className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-rose-400"
-              />
-            </div>
+            <Slider
+  label="MMP-2 / MMP-9 Secretion Level:"
+  min={0}
+  max={100}
+  step={1}
+  value={mmpSecretionLevel}
+  onChange={setMmpSecretionLevel}
+  valueDisplay={<>{mmpSecretionLevel}%</>}
+/>
           </div>
 
           {/* Pharmacological Interventions Sandbox */}

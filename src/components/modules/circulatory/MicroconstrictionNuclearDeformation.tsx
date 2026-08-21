@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { Slider } from '../../ui/Slider';
+
 import {
   Activity,
   Dna,
@@ -320,80 +322,26 @@ export const MicroconstrictionNuclearDeformation: React.FC = () => {
 
           <div className="space-y-3.5">
             {/* Capillary Pore Bore */}
-            <div className="space-y-1">
-              <div className="flex justify-between text-xs font-mono">
-                <span className="text-slate-300">Capillary Pore Diameter:</span>
-                <span className="text-cyan-400 font-bold">{capillaryPoreDiameterUm} µm</span>
-              </div>
-              <input
-                type="range"
-                min="3.5"
-                max="10.0"
-                step="0.25"
-                value={capillaryPoreDiameterUm}
-                onChange={(e) => setCapillaryPoreDiameterUm(Number(e.target.value))}
-                className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-400"
-              />
-              <div className="flex justify-between text-[10px] text-slate-500 font-mono">
-                <span>Severe Microcapillary (3.5 µm)</span>
-                <span>Wide Capillary (10 µm)</span>
-              </div>
-            </div>
-
-            {/* Nuclear Diameter */}
-            <div className="space-y-1">
-              <div className="flex justify-between text-xs font-mono">
-                <span className="text-slate-300">Tumor Nucleus Diameter:</span>
-                <span className="text-purple-400 font-bold">{nuclearDiameterUm} µm</span>
-              </div>
-              <input
-                type="range"
-                min="8.0"
-                max="16.0"
-                step="0.5"
-                value={nuclearDiameterUm}
-                onChange={(e) => setNuclearDiameterUm(Number(e.target.value))}
-                className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-purple-400"
-              />
-            </div>
+            <Slider
+  label="Capillary Pore Diameter:"
+  min={3.5}
+  max={10.0}
+  step={0.25}
+  value={capillaryPoreDiameterUm}
+  onChange={setCapillaryPoreDiameterUm}
+  valueDisplay={<>{capillaryPoreDiameterUm} µm</>}
+/>
 
             {/* Lamin A/C Ratio */}
-            <div className="space-y-1">
-              <div className="flex justify-between text-xs font-mono">
-                <span className="text-slate-300">Nuclear Lamina A/C Ratio:</span>
-                <span className="text-emerald-400 font-bold">{laminAcRatio.toFixed(1)}x</span>
-              </div>
-              <input
-                type="range"
-                min="0.2"
-                max="2.5"
-                step="0.1"
-                value={laminAcRatio}
-                onChange={(e) => setLaminAcRatio(Number(e.target.value))}
-                className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-400"
-              />
-              <div className="flex justify-between text-[10px] text-slate-500 font-mono">
-                <span>Lamin-Low (Fragile/Deformable)</span>
-                <span>Lamin-High (Rigid/Resistant)</span>
-              </div>
-            </div>
-
-            {/* Perfusion Driving Pressure */}
-            <div className="space-y-1">
-              <div className="flex justify-between text-xs font-mono">
-                <span className="text-slate-300">Hydrodynamic Driving Pressure (ΔP):</span>
-                <span className="text-rose-400 font-bold">{perfusionPressureMmHg} mmHg</span>
-              </div>
-              <input
-                type="range"
-                min="5"
-                max="60"
-                step="1"
-                value={perfusionPressureMmHg}
-                onChange={(e) => setPerfusionPressureMmHg(Number(e.target.value))}
-                className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-rose-400"
-              />
-            </div>
+            <Slider
+  label="Nuclear Lamina A/C Ratio:"
+  min={0.2}
+  max={2.5}
+  step={0.1}
+  value={laminAcRatio}
+  onChange={setLaminAcRatio}
+  valueDisplay={<>{laminAcRatio.toFixed(1)}x</>}
+/>
           </div>
 
           {/* Pharmacological Mechanomedicine Sandbox */}

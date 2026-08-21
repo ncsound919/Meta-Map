@@ -1,3 +1,4 @@
+import { Slider } from '../../ui/Slider';
 import React, { useState, useMemo } from 'react';
 import {
   Play,
@@ -314,7 +315,7 @@ export const InterventionScenarioSim: React.FC = () => {
           {PRESET_SCENARIOS.map((scenario) => {
             const isSelected = selectedScenarioId === scenario.id && !customMode;
             return (
-              <button
+              <button type="button"
                 key={scenario.id}
                 onClick={() => handleSelectScenario(scenario)}
                 className={`p-3.5 rounded-xl text-left border transition-all space-y-2 ${
@@ -536,7 +537,7 @@ export const InterventionScenarioSim: React.FC = () => {
                 <Sliders className="w-4 h-4 text-purple-400" />
                 <h4 className="font-bold text-xs text-white uppercase tracking-wider">Multi-Agent Cocktail Sandbox</h4>
               </div>
-              <button
+              <button type="button"
                 onClick={() => handleSelectScenario(currentScenario)}
                 className="text-[10px] font-mono text-slate-400 hover:text-slate-200 flex items-center gap-1"
               >
@@ -546,100 +547,70 @@ export const InterventionScenarioSim: React.FC = () => {
 
             <div className="space-y-3.5">
               {/* Anti-PD-1 */}
-              <div className="space-y-1">
-                <div className="flex justify-between text-xs font-mono">
-                  <span className="text-slate-300">Anti-PD-1 / Anti-PD-L1</span>
-                  <span className="text-cyan-400 font-bold">{params.antiPd1Dose}%</span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={params.antiPd1Dose}
-                  onChange={(e) => handleParamChange('antiPd1Dose', Number(e.target.value))}
-                  className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-400"
-                />
-              </div>
+              <Slider
+  label="Anti-PD-1 / Anti-PD-L1"
+  min={0}
+  max={100}
+  step={1}
+  value={params.antiPd1Dose}
+  onChange={(val) => handleParamChange('antiPd1Dose', val)}
+  valueDisplay={<>{params.antiPd1Dose}%</>}
+/>
 
               {/* Anti-CTLA-4 */}
-              <div className="space-y-1">
-                <div className="flex justify-between text-xs font-mono">
-                  <span className="text-slate-300">Anti-CTLA-4 (Ipilimumab)</span>
-                  <span className="text-purple-400 font-bold">{params.antiCtla4Dose}%</span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={params.antiCtla4Dose}
-                  onChange={(e) => handleParamChange('antiCtla4Dose', Number(e.target.value))}
-                  className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-purple-400"
-                />
-              </div>
+              <Slider
+  label="Anti-CTLA-4 (Ipilimumab)"
+  min={0}
+  max={100}
+  step={1}
+  value={params.antiCtla4Dose}
+  onChange={(val) => handleParamChange('antiCtla4Dose', val)}
+  valueDisplay={<>{params.antiCtla4Dose}%</>}
+/>
 
               {/* CSF-1R Inhibitor */}
-              <div className="space-y-1">
-                <div className="flex justify-between text-xs font-mono">
-                  <span className="text-slate-300">CSF-1R-i (M2 TAM Repolarizer)</span>
-                  <span className="text-amber-400 font-bold">{params.csf1rInhibitor}%</span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={params.csf1rInhibitor}
-                  onChange={(e) => handleParamChange('csf1rInhibitor', Number(e.target.value))}
-                  className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-amber-400"
-                />
-              </div>
+              <Slider
+  label="CSF-1R-i (M2 TAM Repolarizer)"
+  min={0}
+  max={100}
+  step={1}
+  value={params.csf1rInhibitor}
+  onChange={(val) => handleParamChange('csf1rInhibitor', val)}
+  valueDisplay={<>{params.csf1rInhibitor}%</>}
+/>
 
               {/* TGF-beta Blocker */}
-              <div className="space-y-1">
-                <div className="flex justify-between text-xs font-mono">
-                  <span className="text-slate-300">Anti-TGF-β / FAK-i (CAF Barrier)</span>
-                  <span className="text-emerald-400 font-bold">{params.tgfbBlocker}%</span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={params.tgfbBlocker}
-                  onChange={(e) => handleParamChange('tgfbBlocker', Number(e.target.value))}
-                  className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-400"
-                />
-              </div>
+              <Slider
+  label="Anti-TGF-β / FAK-i (CAF Barrier)"
+  min={0}
+  max={100}
+  step={1}
+  value={params.tgfbBlocker}
+  onChange={(val) => handleParamChange('tgfbBlocker', val)}
+  valueDisplay={<>{params.tgfbBlocker}%</>}
+/>
 
               {/* STING Agonist */}
-              <div className="space-y-1">
-                <div className="flex justify-between text-xs font-mono">
-                  <span className="text-slate-300">STING Agonist (cDC1 Cross-Primer)</span>
-                  <span className="text-rose-400 font-bold">{params.stingAgonist}%</span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={params.stingAgonist}
-                  onChange={(e) => handleParamChange('stingAgonist', Number(e.target.value))}
-                  className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-rose-400"
-                />
-              </div>
+              <Slider
+  label="STING Agonist (cDC1 Cross-Primer)"
+  min={0}
+  max={100}
+  step={1}
+  value={params.stingAgonist}
+  onChange={(val) => handleParamChange('stingAgonist', val)}
+  valueDisplay={<>{params.stingAgonist}%</>}
+/>
 
               {/* CAR-T Titer */}
-              <div className="space-y-1">
-                <div className="flex justify-between text-xs font-mono">
-                  <span className="text-slate-300">Adoptive CAR-T / TCR-T Titer</span>
-                  <span className="text-pink-400 font-bold">{params.carTTiter}%</span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={params.carTTiter}
-                  onChange={(e) => handleParamChange('carTTiter', Number(e.target.value))}
-                  className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-pink-400"
-                />
-              </div>
+              <Slider
+  label="Adoptive CAR-T / TCR-T Titer"
+  min={0}
+  max={100}
+  step={1}
+  value={params.carTTiter}
+  onChange={(val) => handleParamChange('carTTiter', val)}
+  valueDisplay={<>{params.carTTiter}%</>}
+/>
             </div>
           </div>
         </div>

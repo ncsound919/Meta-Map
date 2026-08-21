@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { Slider } from '../../ui/Slider';
+
 import {
   Layers,
   Activity,
@@ -186,21 +188,15 @@ export const MultiphysicsCFD3DViewer: React.FC = () => {
             </div>
 
             {/* Stenosis Severity */}
-            <div className="space-y-1 text-xs">
-              <div className="flex justify-between text-slate-300">
-                <span>Stenosis Diameter Reduction:</span>
-                <span className="font-mono font-bold text-rose-400">{stenosisSeverityPct}%</span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="90"
-                step="5"
-                value={stenosisSeverityPct}
-                onChange={(e) => setStenosisSeverityPct(parseInt(e.target.value))}
-                className="w-full accent-rose-500 bg-slate-950 rounded h-1.5"
-              />
-            </div>
+            <Slider
+  label="Stenosis Diameter Reduction:"
+  min={0}
+  max={90}
+  step={5}
+  value={stenosisSeverityPct}
+  onChange={setStenosisSeverityPct}
+  valueDisplay={<>{stenosisSeverityPct}%</>}
+/>
 
             {/* Non-Newtonian Rheology Model */}
             <div className="space-y-1 text-xs">
@@ -227,21 +223,15 @@ export const MultiphysicsCFD3DViewer: React.FC = () => {
             </div>
 
             {/* Vessel Wall Elasticity (FSI) */}
-            <div className="space-y-1 text-xs pt-2 border-t border-slate-800">
-              <div className="flex justify-between text-slate-300">
-                <span>Wall Young's Modulus ($E$):</span>
-                <span className="font-mono font-bold text-cyan-400">{fsiElasticityMpa.toFixed(1)} MPa</span>
-              </div>
-              <input
-                type="range"
-                min="0.3"
-                max="4.0"
-                step="0.1"
-                value={fsiElasticityMpa}
-                onChange={(e) => setFsiElasticityMpa(parseFloat(e.target.value))}
-                className="w-full accent-cyan-500 bg-slate-950 rounded h-1.5"
-              />
-            </div>
+            <Slider
+  label="Wall Young's Modulus ($E$):"
+  min={0.3}
+  max={4.0}
+  step={0.1}
+  value={fsiElasticityMpa}
+  onChange={setFsiElasticityMpa}
+  valueDisplay={<>{fsiElasticityMpa.toFixed(1)} MPa</>}
+/>
           </div>
 
           {/* Governing CFD Equations */}

@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { Slider } from '../ui/Slider';
+
 import { OrganSite, PrimaryCancerType } from '../../types/metastasis';
 import {
   Cpu,
@@ -449,24 +451,20 @@ export const CascadeTwinSimulator: React.FC<CascadeTwinSimulatorProps> = ({
             </div>
 
             {/* Shear Stress Adjuster Slider */}
-            <div className="bg-slate-950 p-3.5 rounded-lg border border-slate-800 space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="font-bold text-slate-200">Vascular Fluid Shear Stress:</span>
-                <span className="font-mono text-purple-300 font-bold">{shearStress} dynes/cm²</span>
-              </div>
-              <input
-                type="range"
-                min="0.5"
-                max="25.0"
-                step="0.5"
-                value={shearStress}
-                onChange={(e) => setShearStress(Number(e.target.value))}
-                className="w-full accent-purple-500 bg-slate-800 h-1.5 rounded-lg cursor-pointer"
-              />
-              <p className="text-[10px] text-slate-500">
+            <div className="space-y-1">
+  <Slider
+  label="Vascular Fluid Shear Stress:"
+  min={0.5}
+  max={25.0}
+  step={0.5}
+  value={shearStress}
+  onChange={setShearStress}
+  valueDisplay={<>{shearStress} dynes/cm²</>}
+/>
+  <p className="text-[10px] text-slate-500">
                 Physiological range: 1.0 dynes/cm² (microcapillaries) to 15.0 dynes/cm² (arterial/large vessels).
               </p>
-            </div>
+</div>
 
             {/* Trigger Button */}
             <button

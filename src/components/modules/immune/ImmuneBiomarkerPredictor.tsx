@@ -1,4 +1,6 @@
 import React, { useState, useMemo } from 'react';
+import { Slider } from '../../ui/Slider';
+
 import {
   Sliders,
   Dna,
@@ -198,7 +200,7 @@ export const ImmuneBiomarkerPredictor: React.FC = () => {
         <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-800">
           <span className="text-xs font-mono text-slate-400">Load Genomic Archetype:</span>
           {Object.keys(CANCER_PRESETS).map((preset) => (
-            <button
+            <button type="button"
               key={preset}
               onClick={() => handlePreset(preset)}
               className="px-2.5 py-1 rounded-lg text-xs font-mono bg-slate-950 border border-slate-800 text-slate-300 hover:border-emerald-500 hover:text-emerald-300 transition-all"
@@ -222,121 +224,48 @@ export const ImmuneBiomarkerPredictor: React.FC = () => {
 
           <div className="space-y-3.5">
             {/* TMB */}
-            <div className="space-y-1">
-              <div className="flex justify-between text-xs font-mono">
-                <span className="text-slate-300">Tumor Mutational Burden (TMB)</span>
-                <span className="text-emerald-400 font-bold">{profile.tmb} mut/Mb</span>
-              </div>
-              <input
-                type="range"
-                min="1"
-                max="60"
-                step="0.5"
-                value={profile.tmb}
-                onChange={(e) => setProfile((p) => ({ ...p, tmb: Number(e.target.value) }))}
-                className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-400"
-              />
-              <div className="flex justify-between text-[10px] text-slate-500 font-mono">
-                <span>Low (&lt;6)</span>
-                <span>FDA High Threshold (≥10)</span>
-                <span>Hypermutated (&gt;30)</span>
-              </div>
-            </div>
-
-            {/* MSI Status */}
-            <div className="space-y-1">
-              <div className="flex justify-between text-xs font-mono">
-                <span className="text-slate-300">Microsatellite Instability (MSI) Status</span>
-                <span className="text-purple-400 font-bold">{profile.msiStatus}</span>
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  onClick={() => setProfile((p) => ({ ...p, msiStatus: 'MSS' }))}
-                  className={`py-1.5 px-3 rounded-lg text-xs font-mono transition-all ${
-                    profile.msiStatus === 'MSS'
-                      ? 'bg-slate-800 border border-slate-600 text-white font-bold'
-                      : 'bg-slate-950 border border-slate-800 text-slate-400'
-                  }`}
-                >
-                  MSS / pMMR (Stable)
-                </button>
-                <button
-                  onClick={() => setProfile((p) => ({ ...p, msiStatus: 'MSI-H' }))}
-                  className={`py-1.5 px-3 rounded-lg text-xs font-mono transition-all ${
-                    profile.msiStatus === 'MSI-H'
-                      ? 'bg-purple-950 border border-purple-500 text-purple-200 font-bold'
-                      : 'bg-slate-950 border border-slate-800 text-slate-400'
-                  }`}
-                >
-                  MSI-H / dMMR (Instability)
-                </button>
-              </div>
-            </div>
-
-            {/* PD-L1 Combined Positive Score (CPS) */}
-            <div className="space-y-1">
-              <div className="flex justify-between text-xs font-mono">
-                <span className="text-slate-300">PD-L1 Combined Positive Score (CPS / TPS)</span>
-                <span className="text-cyan-400 font-bold">CPS {profile.pdl1Cps}</span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={profile.pdl1Cps}
-                onChange={(e) => setProfile((p) => ({ ...p, pdl1Cps: Number(e.target.value) }))}
-                className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-400"
-              />
-            </div>
+            <Slider
+  label="Tumor Mutational Burden (TMB)"
+  min={1}
+  max={60}
+  step={0.5}
+  value={profile.tmb}
+  onChange={setProfile}
+  valueDisplay={<>{profile.tmb} mut/Mb</>}
+/>
 
             {/* GEP Score (18-Gene T-cell Inflamed Signature) */}
-            <div className="space-y-1">
-              <div className="flex justify-between text-xs font-mono">
-                <span className="text-slate-300">T-Cell-Inflamed GEP Score (Ayers 18-gene)</span>
-                <span className="text-amber-400 font-bold">{profile.gepScore > 0 ? `+${profile.gepScore}` : profile.gepScore}</span>
-              </div>
-              <input
-                type="range"
-                min="-1.5"
-                max="1.5"
-                step="0.05"
-                value={profile.gepScore}
-                onChange={(e) => setProfile((p) => ({ ...p, gepScore: Number(e.target.value) }))}
-                className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-amber-400"
-              />
-            </div>
+            <Slider
+  label="T-Cell-Inflamed GEP Score (Ayers 18-gene)"
+  min={-1.5}
+  max={1.5}
+  step={0.05}
+  value={profile.gepScore}
+  onChange={setProfile}
+  valueDisplay={<>{profile.gepScore > 0 ? `+${profile.gepScore}` : profile.gepScore}</>}
+/>
 
             {/* Cytolytic Index (CYT = GZMA * PRF1) */}
-            <div className="space-y-1">
-              <div className="flex justify-between text-xs font-mono">
-                <span className="text-slate-300">Cytolytic Index (CYT: GZMA + PRF1)</span>
-                <span className="text-pink-400 font-bold">{profile.cytScore} AU</span>
-              </div>
-              <input
-                type="range"
-                min="10"
-                max="400"
-                value={profile.cytScore}
-                onChange={(e) => setProfile((p) => ({ ...p, cytScore: Number(e.target.value) }))}
-                className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-pink-400"
-              />
-            </div>
+            <Slider
+  label="Cytolytic Index (CYT: GZMA + PRF1)"
+  min={10}
+  max={400}
+  step={1}
+  value={profile.cytScore}
+  onChange={setProfile}
+  valueDisplay={<>{profile.cytScore} AU</>}
+/>
 
             {/* Clonal Heterogeneity (MATH) */}
-            <div className="space-y-1">
-              <div className="flex justify-between text-xs font-mono">
-                <span className="text-slate-300">Clonal Heterogeneity (MATH Score)</span>
-                <span className="text-rose-400 font-bold">{profile.clonalHeterogeneity}%</span>
-              </div>
-              <input
-                type="range"
-                min="10"
-                max="80"
-                value={profile.clonalHeterogeneity}
-                onChange={(e) => setProfile((p) => ({ ...p, clonalHeterogeneity: Number(e.target.value) }))}
-                className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-rose-400"
-              />
-            </div>
+            <Slider
+  label="Clonal Heterogeneity (MATH Score)"
+  min={10}
+  max={80}
+  step={1}
+  value={profile.clonalHeterogeneity}
+  onChange={setProfile}
+  valueDisplay={<>{profile.clonalHeterogeneity}%</>}
+/>
           </div>
         </div>
 

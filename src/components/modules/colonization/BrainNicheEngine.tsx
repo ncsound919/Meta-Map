@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { Slider } from '../../ui/Slider';
+
 import {
   Brain,
   Zap,
@@ -234,72 +236,48 @@ export const BrainNicheEngine: React.FC = () => {
             </div>
 
             {/* BBB Integrity */}
-            <div className="space-y-1 text-xs">
-              <div className="flex justify-between text-slate-300">
-                <span>Blood-Brain Barrier Integrity:</span>
-                <span className="font-mono font-bold text-cyan-400">{bbbIntegrity}%</span>
-              </div>
-              <input
-                type="range"
-                min="10"
-                max="100"
-                step="5"
-                value={bbbIntegrity}
-                onChange={(e) => setBbbIntegrity(parseInt(e.target.value))}
-                className="w-full accent-cyan-500 bg-slate-950 rounded h-1.5"
-              />
-            </div>
+            <Slider
+  label="Blood-Brain Barrier Integrity:"
+  min={10}
+  max={100}
+  step={5}
+  value={bbbIntegrity}
+  onChange={setBbbIntegrity}
+  valueDisplay={<>{bbbIntegrity}%</>}
+/>
 
             {/* L1CAM Co-option */}
-            <div className="space-y-1 text-xs">
-              <div className="flex justify-between text-slate-300">
-                <span>L1CAM Vascular Spreading Expression:</span>
-                <span className="font-mono font-bold text-indigo-400">{l1camCooption}%</span>
-              </div>
-              <input
-                type="range"
-                min="10"
-                max="100"
-                step="5"
-                value={l1camCooption}
-                onChange={(e) => setL1camCooption(parseInt(e.target.value))}
-                className="w-full accent-indigo-500 bg-slate-950 rounded h-1.5"
-              />
-            </div>
+            <Slider
+  label="L1CAM Vascular Spreading Expression:"
+  min={10}
+  max={100}
+  step={5}
+  value={l1camCooption}
+  onChange={setL1camCooption}
+  valueDisplay={<>{l1camCooption}%</>}
+/>
 
             {/* Cx43 Gap Junctions */}
-            <div className="space-y-1 text-xs">
-              <div className="flex justify-between text-slate-300">
-                <span>Connexin-43 Coupling to Astrocytes:</span>
-                <span className="font-mono font-bold text-purple-400">{cx43GapJunctions}%</span>
-              </div>
-              <input
-                type="range"
-                min="5"
-                max="100"
-                step="5"
-                value={cx43GapJunctions}
-                onChange={(e) => setCx43GapJunctions(parseInt(e.target.value))}
-                className="w-full accent-purple-500 bg-slate-950 rounded h-1.5"
-              />
-            </div>
+            <Slider
+  label="Connexin-43 Coupling to Astrocytes:"
+  min={5}
+  max={100}
+  step={5}
+  value={cx43GapJunctions}
+  onChange={setCx43GapJunctions}
+  valueDisplay={<>{cx43GapJunctions}%</>}
+/>
 
             {/* Astrocytic STAT3 */}
-            <div className="space-y-1 text-xs">
-              <div className="flex justify-between text-slate-300">
-                <span>Astrocyte STAT3 Phosphorylation:</span>
-                <span className="font-mono font-bold text-rose-400">{astrocyticStat3}%</span>
-              </div>
-              <input
-                type="range"
-                min="10"
-                max="100"
-                step="5"
-                value={astrocyticStat3}
-                onChange={(e) => setAstrocyticStat3(parseInt(e.target.value))}
-                className="w-full accent-rose-500 bg-slate-950 rounded h-1.5"
-              />
-            </div>
+            <Slider
+  label="Astrocyte STAT3 Phosphorylation:"
+  min={10}
+  max={100}
+  step={5}
+  value={astrocyticStat3}
+  onChange={setAstrocyticStat3}
+  valueDisplay={<>{astrocyticStat3}%</>}
+/>
           </div>
 
           {/* Brain Penetrant Interventions */}

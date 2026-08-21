@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Slider } from '../ui/Slider';
 import { OrganSite, PrimaryCancerType } from '../../types/metastasis';
 import {
   Film,
@@ -407,17 +408,17 @@ export const LivingMetastasisCinema: React.FC<LivingMetastasisCinemaProps> = ({
                 </button>
 
                 {/* Hour Timeline Slider */}
-                <input
-                  type="range"
-                  min="0"
-                  max={timeFrameHours}
-                  step="6"
-                  value={currentHour}
-                  onChange={(e) => setCurrentHour(Number(e.target.value))}
-                  className="flex-1 accent-cyan-500 bg-slate-800 h-2 rounded-lg cursor-pointer"
-                />
-
-                <span className="font-mono text-slate-300 w-16 text-right">{currentHour}h / {timeFrameHours}h</span>
+                <div className="flex-1 pt-1">
+                  <Slider
+                    label="Timeline"
+                    min={0}
+                    max={timeFrameHours}
+                    step={6}
+                    value={currentHour}
+                    onChange={(val) => setCurrentHour(val)}
+                    valueDisplay={`${currentHour}h / ${timeFrameHours}h`}
+                  />
+                </div>
 
                 {/* Speed Multiplier */}
                 <select

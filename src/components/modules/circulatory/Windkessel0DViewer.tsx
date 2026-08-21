@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { Slider } from '../../ui/Slider';
+
 import {
   Activity,
   Heart,
@@ -254,90 +256,60 @@ export const Windkessel0DViewer: React.FC = () => {
             </div>
 
             {/* Heart Rate */}
-            <div className="space-y-1 text-xs">
-              <div className="flex justify-between text-slate-300">
-                <span>Heart Rate (HR):</span>
-                <span className="font-mono font-bold text-amber-400">{heartRateBpm} BPM</span>
-              </div>
-              <input
-                type="range"
-                min="40"
-                max="160"
-                step="5"
-                value={heartRateBpm}
-                onChange={(e) => setHeartRateBpm(parseInt(e.target.value))}
-                className="w-full accent-amber-500 bg-slate-950 rounded h-1.5"
-              />
-            </div>
+            <Slider
+  label="Heart Rate (HR):"
+  min={40}
+  max={160}
+  step={5}
+  value={heartRateBpm}
+  onChange={setHeartRateBpm}
+  valueDisplay={<>{heartRateBpm} BPM</>}
+/>
 
             {/* Stroke Volume */}
-            <div className="space-y-1 text-xs">
-              <div className="flex justify-between text-slate-300">
-                <span>Stroke Volume (SV):</span>
-                <span className="font-mono font-bold text-cyan-400">{strokeVolumeMl} mL</span>
-              </div>
-              <input
-                type="range"
-                min="30"
-                max="120"
-                step="5"
-                value={strokeVolumeMl}
-                onChange={(e) => setStrokeVolumeMl(parseInt(e.target.value))}
-                className="w-full accent-cyan-500 bg-slate-950 rounded h-1.5"
-              />
-            </div>
+            <Slider
+  label="Stroke Volume (SV):"
+  min={30}
+  max={120}
+  step={5}
+  value={strokeVolumeMl}
+  onChange={setStrokeVolumeMl}
+  valueDisplay={<>{strokeVolumeMl} mL</>}
+/>
 
             {/* Total Arterial Compliance */}
-            <div className="space-y-1 text-xs">
-              <div className="flex justify-between text-slate-300">
-                <span>Arterial Compliance (C):</span>
-                <span className="font-mono font-bold text-purple-400">{arterialComplianceC.toFixed(2)} mL/mmHg</span>
-              </div>
-              <input
-                type="range"
-                min="0.4"
-                max="2.5"
-                step="0.1"
-                value={arterialComplianceC}
-                onChange={(e) => setArterialComplianceC(parseFloat(e.target.value))}
-                className="w-full accent-purple-500 bg-slate-950 rounded h-1.5"
-              />
-            </div>
+            <Slider
+  label="Arterial Compliance (C):"
+  min={0.4}
+  max={2.5}
+  step={0.1}
+  value={arterialComplianceC}
+  onChange={setArterialComplianceC}
+  valueDisplay={<>{arterialComplianceC.toFixed(2)} mL/mmHg</>}
+/>
 
             {/* Systemic Vascular Resistance */}
-            <div className="space-y-1 text-xs">
-              <div className="flex justify-between text-slate-300">
-                <span>Systemic Resistance (R / SVR):</span>
-                <span className="font-mono font-bold text-emerald-400">{systemicVascularResR.toFixed(2)} mmHg·s/mL</span>
-              </div>
-              <input
-                type="range"
-                min="0.5"
-                max="2.5"
-                step="0.05"
-                value={systemicVascularResR}
-                onChange={(e) => setSystemicVascularResR(parseFloat(e.target.value))}
-                className="w-full accent-emerald-500 bg-slate-950 rounded h-1.5"
-              />
-            </div>
+            <Slider
+  label="Systemic Resistance (R / SVR):"
+  min={0.5}
+  max={2.5}
+  step={0.05}
+  value={systemicVascularResR}
+  onChange={setSystemicVascularResR}
+  valueDisplay={<>{systemicVascularResR.toFixed(2)} mmHg·s/mL</>}
+/>
 
             {/* Characteristic Impedance (3-element) */}
             {(windkesselModelType === '3_element' || windkesselModelType === '4_element') && (
-              <div className="space-y-1 text-xs">
-                <div className="flex justify-between text-slate-300">
-                  <span>Aortic Characteristic Z0:</span>
-                  <span className="font-mono font-bold text-rose-400">{aorticCharacteristicZ0.toFixed(3)} mmHg·s/mL</span>
-                </div>
-                <input
-                  type="range"
-                  min="0.01"
-                  max="0.15"
-                  step="0.005"
-                  value={aorticCharacteristicZ0}
-                  onChange={(e) => setAorticCharacteristicZ0(parseFloat(e.target.value))}
-                  className="w-full accent-rose-500 bg-slate-950 rounded h-1.5"
-                />
-              </div>
+              <Slider
+  label="Aortic Characteristic Z0:"
+  min={0.01}
+  max={0.15}
+  step={0.005}
+  value={aorticCharacteristicZ0}
+  onChange={setAorticCharacteristicZ0}
+  valueDisplay={<>{aorticCharacteristicZ0.toFixed(3)} mmHg·s/mL</>}
+/>
             )}
           </div>
 

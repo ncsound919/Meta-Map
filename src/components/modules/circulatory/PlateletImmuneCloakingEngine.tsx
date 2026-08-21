@@ -1,4 +1,6 @@
 import React, { useState, useMemo } from 'react';
+import { Slider } from '../../ui/Slider';
+
 import {
   Shield,
   ShieldAlert,
@@ -248,79 +250,26 @@ export const PlateletImmuneCloakingEngine: React.FC = () => {
 
           <div className="space-y-4">
             {/* Platelet Count */}
-            <div className="space-y-1">
-              <div className="flex justify-between text-xs font-mono">
-                <span className="text-slate-300">Circulating Platelet Count:</span>
-                <span className="text-emerald-400 font-bold">{plateletCountKUl} k/µL</span>
-              </div>
-              <input
-                type="range"
-                min="50"
-                max="600"
-                step="10"
-                value={plateletCountKUl}
-                onChange={(e) => setPlateletCountKUl(Number(e.target.value))}
-                className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-400"
-              />
-              <div className="flex justify-between text-[10px] text-slate-500 font-mono">
-                <span>Thrombocytopenia (50k)</span>
-                <span>Normal (250k)</span>
-                <span>Thrombocytosis (600k)</span>
-              </div>
-            </div>
-
-            {/* Tumor Tissue Factor (TF) Expression */}
-            <div className="space-y-1">
-              <div className="flex justify-between text-xs font-mono">
-                <span className="text-slate-300">CTC Tissue Factor (TF / CD142) Expression:</span>
-                <span className="text-rose-400 font-bold">{tissueFactorExpression}%</span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={tissueFactorExpression}
-                onChange={(e) => setTissueFactorExpression(Number(e.target.value))}
-                className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-rose-400"
-              />
-              <div className="flex justify-between text-[10px] text-slate-500 font-mono">
-                <span>TF-Low (Poor Thrombin Gen)</span>
-                <span>TF-High (Pro-Thrombotic)</span>
-              </div>
-            </div>
-
-            {/* NK Cell Pressure */}
-            <div className="space-y-1">
-              <div className="flex justify-between text-xs font-mono">
-                <span className="text-slate-300">Host NK Cell Cytolytic Pressure:</span>
-                <span className="text-cyan-400 font-bold">{nkCytotoxicPressure}%</span>
-              </div>
-              <input
-                type="range"
-                min="10"
-                max="100"
-                value={nkCytotoxicPressure}
-                onChange={(e) => setNkCytotoxicPressure(Number(e.target.value))}
-                className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-400"
-              />
-            </div>
+            <Slider
+  label="Circulating Platelet Count:"
+  min={50}
+  max={600}
+  step={10}
+  value={plateletCountKUl}
+  onChange={setPlateletCountKUl}
+  valueDisplay={<>{plateletCountKUl} k/µL</>}
+/>
 
             {/* Shear Stress */}
-            <div className="space-y-1">
-              <div className="flex justify-between text-xs font-mono">
-                <span className="text-slate-300">Local Vascular Shear Rate (γ̇):</span>
-                <span className="text-amber-400 font-bold">{shearRateS1} s⁻¹</span>
-              </div>
-              <input
-                type="range"
-                min="100"
-                max="2500"
-                step="50"
-                value={shearRateS1}
-                onChange={(e) => setShearRateS1(Number(e.target.value))}
-                className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-amber-400"
-              />
-            </div>
+            <Slider
+  label="Local Vascular Shear Rate (γ̇):"
+  min={100}
+  max={2500}
+  step={50}
+  value={shearRateS1}
+  onChange={setShearRateS1}
+  valueDisplay={<>{shearRateS1} s⁻¹</>}
+/>
           </div>
 
           {/* Pharmacological Anti-Metastatic Interventions */}

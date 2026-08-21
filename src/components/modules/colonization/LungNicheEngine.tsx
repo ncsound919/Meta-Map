@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { Slider } from '../../ui/Slider';
+
 import {
   Wind,
   Activity,
@@ -209,72 +211,48 @@ export const LungNicheEngine: React.FC = () => {
             </div>
 
             {/* POSTN / TNC */}
-            <div className="space-y-1 text-xs">
-              <div className="flex justify-between text-slate-300">
-                <span>Periostin (POSTN) / Tenascin-C Matrix:</span>
-                <span className="font-mono font-bold text-cyan-400">{tenascinCPetriostin}%</span>
-              </div>
-              <input
-                type="range"
-                min="10"
-                max="100"
-                step="5"
-                value={tenascinCPetriostin}
-                onChange={(e) => setTenascinCPetriostin(parseInt(e.target.value))}
-                className="w-full accent-cyan-500 bg-slate-950 rounded h-1.5"
-              />
-            </div>
+            <Slider
+  label="Periostin (POSTN) / Tenascin-C Matrix:"
+  min={10}
+  max={100}
+  step={5}
+  value={tenascinCPetriostin}
+  onChange={setTenascinCPetriostin}
+  valueDisplay={<>{tenascinCPetriostin}%</>}
+/>
 
             {/* NET Density */}
-            <div className="space-y-1 text-xs">
-              <div className="flex justify-between text-slate-300">
-                <span>Neutrophil Extracellular Traps (NETs):</span>
-                <span className="font-mono font-bold text-rose-400">{netFormation}%</span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                step="5"
-                value={netFormation}
-                onChange={(e) => setNetFormation(parseInt(e.target.value))}
-                className="w-full accent-rose-500 bg-slate-950 rounded h-1.5"
-              />
-            </div>
+            <Slider
+  label="Neutrophil Extracellular Traps (NETs):"
+  min={0}
+  max={100}
+  step={5}
+  value={netFormation}
+  onChange={setNetFormation}
+  valueDisplay={<>{netFormation}%</>}
+/>
 
             {/* TSP-1 Quiescence */}
-            <div className="space-y-1 text-xs">
-              <div className="flex justify-between text-slate-300">
-                <span>Thrombospondin-1 (TSP-1) Dormancy Field:</span>
-                <span className="font-mono font-bold text-emerald-400">{tsp1Dormancy}%</span>
-              </div>
-              <input
-                type="range"
-                min="10"
-                max="100"
-                step="5"
-                value={tsp1Dormancy}
-                onChange={(e) => setTsp1Dormancy(parseInt(e.target.value))}
-                className="w-full accent-emerald-500 bg-slate-950 rounded h-1.5"
-              />
-            </div>
+            <Slider
+  label="Thrombospondin-1 (TSP-1) Dormancy Field:"
+  min={10}
+  max={100}
+  step={5}
+  value={tsp1Dormancy}
+  onChange={setTsp1Dormancy}
+  valueDisplay={<>{tsp1Dormancy}%</>}
+/>
 
             {/* Cyclic Stretch */}
-            <div className="space-y-1 text-xs">
-              <div className="flex justify-between text-slate-300">
-                <span>Alveolar Cyclic Respiration Strain:</span>
-                <span className="font-mono font-bold text-amber-400">{cyclicStretch}%</span>
-              </div>
-              <input
-                type="range"
-                min="10"
-                max="100"
-                step="5"
-                value={cyclicStretch}
-                onChange={(e) => setCyclicStretch(parseInt(e.target.value))}
-                className="w-full accent-amber-500 bg-slate-950 rounded h-1.5"
-              />
-            </div>
+            <Slider
+  label="Alveolar Cyclic Respiration Strain:"
+  min={10}
+  max={100}
+  step={5}
+  value={cyclicStretch}
+  onChange={setCyclicStretch}
+  valueDisplay={<>{cyclicStretch}%</>}
+/>
           </div>
 
           {/* Lung Interventions */}

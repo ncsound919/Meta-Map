@@ -48,6 +48,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const modules = [
     { id: 'hpc_compute', name: 'HPC Compute Backend', icon: Server },
+    { id: 'clinical_ingestion', name: 'Clinical Data Hub', icon: Database },
     { id: 'proactive_interception', name: 'Proactive Interception', icon: Stethoscope },
     { id: 'model_validation', name: 'Validation & EKF Twin', icon: FileCheck2 },
     { id: 'immune_grid', name: 'Immune Interaction Grid', icon: ShieldAlert },

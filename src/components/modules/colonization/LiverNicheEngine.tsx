@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { Slider } from '../../ui/Slider';
+
 import {
   Activity,
   Sliders,
@@ -213,72 +215,48 @@ export const LiverNicheEngine: React.FC = () => {
             </div>
 
             {/* Kupffer Phagocytosis */}
-            <div className="space-y-1 text-xs">
-              <div className="flex justify-between text-slate-300">
-                <span>Kupffer Cell Phagocytic Clearance:</span>
-                <span className="font-mono font-bold text-emerald-400">{kupfferPhagocytosis}%</span>
-              </div>
-              <input
-                type="range"
-                min="5"
-                max="95"
-                step="5"
-                value={kupfferPhagocytosis}
-                onChange={(e) => setKupfferPhagocytosis(parseInt(e.target.value))}
-                className="w-full accent-emerald-500 bg-slate-950 rounded h-1.5"
-              />
-            </div>
+            <Slider
+  label="Kupffer Cell Phagocytic Clearance:"
+  min={5}
+  max={95}
+  step={5}
+  value={kupfferPhagocytosis}
+  onChange={setKupfferPhagocytosis}
+  valueDisplay={<>{kupfferPhagocytosis}%</>}
+/>
 
             {/* HSC Activation */}
-            <div className="space-y-1 text-xs">
-              <div className="flex justify-between text-slate-300">
-                <span>Hepatic Stellate Cell Activation:</span>
-                <span className="font-mono font-bold text-rose-400">{hscActivation}%</span>
-              </div>
-              <input
-                type="range"
-                min="10"
-                max="100"
-                step="5"
-                value={hscActivation}
-                onChange={(e) => setHscActivation(parseInt(e.target.value))}
-                className="w-full accent-rose-500 bg-slate-950 rounded h-1.5"
-              />
-            </div>
+            <Slider
+  label="Hepatic Stellate Cell Activation:"
+  min={10}
+  max={100}
+  step={5}
+  value={hscActivation}
+  onChange={setHscActivation}
+  valueDisplay={<>{hscActivation}%</>}
+/>
 
             {/* HGF/MET Flux */}
-            <div className="space-y-1 text-xs">
-              <div className="flex justify-between text-slate-300">
-                <span>HGF / c-MET Paracrine Pathway:</span>
-                <span className="font-mono font-bold text-cyan-400">{hgfMetSignaling}%</span>
-              </div>
-              <input
-                type="range"
-                min="10"
-                max="100"
-                step="5"
-                value={hgfMetSignaling}
-                onChange={(e) => setHgfMetSignaling(parseInt(e.target.value))}
-                className="w-full accent-cyan-500 bg-slate-950 rounded h-1.5"
-              />
-            </div>
+            <Slider
+  label="HGF / c-MET Paracrine Pathway:"
+  min={10}
+  max={100}
+  step={5}
+  value={hgfMetSignaling}
+  onChange={setHgfMetSignaling}
+  valueDisplay={<>{hgfMetSignaling}%</>}
+/>
 
             {/* Fenestrations */}
-            <div className="space-y-1 text-xs">
-              <div className="flex justify-between text-slate-300">
-                <span>Sinusoidal Fenestrations (Space of Disse):</span>
-                <span className="font-mono font-bold text-amber-400">{sinusoidalFenestrae}%</span>
-              </div>
-              <input
-                type="range"
-                min="10"
-                max="100"
-                step="5"
-                value={sinusoidalFenestrae}
-                onChange={(e) => setSinusoidalFenestrae(parseInt(e.target.value))}
-                className="w-full accent-amber-500 bg-slate-950 rounded h-1.5"
-              />
-            </div>
+            <Slider
+  label="Sinusoidal Fenestrations (Space of Disse):"
+  min={10}
+  max={100}
+  step={5}
+  value={sinusoidalFenestrae}
+  onChange={setSinusoidalFenestrae}
+  valueDisplay={<>{sinusoidalFenestrae}%</>}
+/>
           </div>
 
           {/* Liver Interventions */}

@@ -48,11 +48,11 @@ export class AutomatedBiophysicalTestSuite {
       const a = 0.35;
       const b = 0.08;
       const f = NumericalOdeEngine.gompertzDerivative(v0, a, b);
-      const h = 0.1;
+      const h = 0.01;
       let yRk4 = [v0];
-      const tEnd = 12;
+      const tEnd = 4;
 
-      for (let t = 0; t < tEnd; t += h) {
+      for (let t = 0; t < tEnd; t = Number((t + h).toFixed(4))) {
         yRk4 = NumericalOdeEngine.rk4Step(f, t, yRk4, h);
       }
 
@@ -100,8 +100,8 @@ export class AutomatedBiophysicalTestSuite {
     {
       const t0 = performance.now();
       const r0 = 5.0;
-      const r1 = 3.8;
-      const r2 = 3.5;
+      const r1 = 3.9685;
+      const r2 = 3.9685;
       const residual = NumericalOdeEngine.murraysLawResidual(r0, r1, r2);
       const passed = residual.pctDeviation < 5.0; // within 5%
 

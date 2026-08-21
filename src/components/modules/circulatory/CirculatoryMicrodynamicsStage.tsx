@@ -1,24 +1,10 @@
+import { Slider } from '../../ui/Slider';
 import React, { useState, useEffect, useRef } from 'react';
 import {
   Activity,
-  Play,
-  Pause,
-  RotateCcw,
-  Zap,
   Sliders,
   Shield,
-  ShieldAlert,
-  Droplets,
-  Heart,
-  TrendingDown,
-  TrendingUp,
-  Download,
-  Flame,
   CheckCircle2,
-  Sparkles,
-  HelpCircle,
-  Eye,
-  Settings2,
   Wind
 } from 'lucide-react';
 import {
@@ -29,11 +15,7 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  AreaChart,
-  Area
+  ResponsiveContainer
 } from 'recharts';
 import { OrganSite, PrimaryCancerType } from '../../../types/metastasis';
 
@@ -57,16 +39,15 @@ interface Particle {
   shearAccumulated: number;
 }
 
+type InterventionType = 'none' | 'antiplatelet_aspirin' | 'anti_integrin' | 'shear_stabilizer' | 'vasodilator';
+
 export const CirculatoryMicrodynamicsStage: React.FC<CirculatoryMicrodynamicsProps> = ({
   selectedOrgan,
   selectedCancerType
 }) => {
   // Simulator Controls
-  const [isPlaying, setIsPlaying] = useState<boolean>(true);
-  const [simSpeed, setSimSpeed] = useState<number>(1.0);
+  const [isPlaying] = useState<boolean>(true);
   const [cardiacOutputLpm, setCardiacOutputLpm] = useState<number>(5.0); // 3.0 to 8.0 L/min
-  const [meanArterialPressureMmHg, setMeanArterialPressureMmHg] = useState<number>(95);
-  const [bloodViscosityCp, setBloodViscosityCp] = useState<number>(3.5); // cP (mPa.s)
   
   // Vessel Microgeometry & Flow Parameters
   const [vesselCompartment, setVesselCompartment] = useState<'aorta' | 'arteriole' | 'capillary' | 'venule' | 'organ_microvasculature'>('capillary');
@@ -75,23 +56,18 @@ export const CirculatoryMicrodynamicsStage: React.FC<CirculatoryMicrodynamicsPro
   const [wallShearStressDyn, setWallShearStressDyn] = useState<number>(12.5); // dyn/cm2
   
   // CTC Biomechanical Parameters
-  const [ctcInflowRate, setCtcInflowRate] = useState<number>(120); // cells/min
   const [ctcClusterFraction, setCtcClusterFraction] = useState<number>(35); // % clusters
-  const [clusterMeanSize, setClusterMeanSize] = useState<number>(4); // 2-10 cells
   const [plateletCloakingLevel, setPlateletCloakingLevel] = useState<number>(75); // % cloaked
   const [membraneDeformabilityKpa, setMembraneDeformabilityKpa] = useState<number>(0.8); // 0.2 to 2.5 kPa
-  const [selectinIntegrinAffinity, setSelectinIntegrinAffinity] = useState<number>(0.85);
 
   // Pharmacological Interventions
-  const [activeIntervention, setActiveIntervention] = useState<'none' | 'antiplatelet_aspirin' | 'anti_integrin' | 'shear_stabilizer' | 'vasodilator'>('none');
+  const [activeIntervention, setActiveIntervention] = useState<InterventionType>('none');
 
   // Simulation Computed Telemetry
-  const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
   const [totalDisseminated, setTotalDisseminated] = useState<number>(850);
   const [totalSurviving, setTotalSurviving] = useState<number>(142);
   const [totalArrestedOrgan, setTotalArrestedOrgan] = useState<number>(68);
   const [totalDestroyedShear, setTotalDestroyedShear] = useState<number>(540);
-  const [totalKilledImmune, setTotalKilledImmune] = useState<number>(100);
 
   // Time-series telemetry history
   const [telemetryHistory, setTelemetryHistory] = useState<Array<{
@@ -105,8 +81,87 @@ export const CirculatoryMicrodynamicsStage: React.FC<CirculatoryMicrodynamicsPro
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const particlesRef = useRef<Particle[]>([]);
   const animFrameIdRef = useRef<number | null>(null);
+  const timeRef = useRef<number>(0);
+
+  // Fixed constants replacing dead state
+  const simSpeed = 1.0;
+  const bloodViscosityCp = 3.5;
+  const ctcInflowRate = 120; 
+  const clusterMeanSize = 4;
+  const selectinIntegrinAffinity = 0.85;
+
+  // Sync selectedOrgan prop
+  useEffect(() => {
+    if (selectedOrgan !== 'all') {
+      setTargetOrganSite(selectedOrgan);
+      if (selectedOrgan === 'bone') {
+        setVesselDiameterUm(9.0);
+        setWallShearStressDyn(8.5);
+        setVesselCompartment('organ_microvasculature');
+      } else if (selectedOrgan === 'brain') {
+        setVesselDiameterUm(5.5);
+        setWallShearStressDyn(18.0);
+        setVesselCompartment('capillary');
+      } else if (selectedOrgan === 'liver') {
+        setVesselDiameterUm(12.0);
+        setWallShearStressDyn(3.5);
+        setVesselCompartment('organ_microvasculature');
+      } else if (selectedOrgan === 'lung') {
+        setVesselDiameterUm(7.0);
+        setWallShearStressDyn(14.0);
+        setVesselCompartment('capillary');
+      }
+    }
+  }, [selectedOrgan]);
+
+  // Sync selectedCancerType biomechanics
+  useEffect(() => {
+    if (selectedCancerType !== 'all') {
+      switch (selectedCancerType) {
+        case 'Pancreatic (PAAD)':
+          setMembraneDeformabilityKpa(0.35); // highly stiff, low deformability
+          setCtcClusterFraction(50);         // high cluster affinity
+          setPlateletCloakingLevel(95);      // heavy shielding
+          break;
+        case 'Breast (BRCA)':
+          setMembraneDeformabilityKpa(0.75);
+          setCtcClusterFraction(45);
+          setPlateletCloakingLevel(70);
+          break;
+        case 'Prostate (PRAD)':
+          setMembraneDeformabilityKpa(0.50);
+          setCtcClusterFraction(55);
+          setPlateletCloakingLevel(80);
+          break;
+        case 'Melanoma (SKCM)':
+          setMembraneDeformabilityKpa(1.40); // highly deformable
+          setCtcClusterFraction(15);
+          setPlateletCloakingLevel(90);
+          break;
+        case 'Lung Non-Small (LUAD/LUSC)':
+          setMembraneDeformabilityKpa(1.10);
+          setCtcClusterFraction(20);
+          setPlateletCloakingLevel(60);
+          break;
+        case 'Colorectal (COAD/READ)':
+          setMembraneDeformabilityKpa(0.90);
+          setCtcClusterFraction(35);
+          setPlateletCloakingLevel(85);
+          break;
+        case 'Renal (KIRC)':
+          setMembraneDeformabilityKpa(0.80);
+          setCtcClusterFraction(30);
+          setPlateletCloakingLevel(65);
+          break;
+        default:
+          break;
+      }
+    }
+  }, [selectedCancerType]);
 
   // Derived fluid mechanics calculations
+  const effectiveVesselDiameterUm = vesselDiameterUm * (activeIntervention === 'vasodilator' ? 1.3 : 1.0);
+
   const effectiveShearStress = (
     (wallShearStressDyn * (bloodViscosityCp / 3.5) * (cardiacOutputLpm / 5.0)) *
     (activeIntervention === 'vasodilator' ? 0.7 : 1.0)
@@ -124,7 +179,7 @@ export const CirculatoryMicrodynamicsStage: React.FC<CirculatoryMicrodynamicsPro
     Math.max(
       10,
       Math.round(
-        (Math.max(0, 15 - vesselDiameterUm) / 10) * 60 +
+        (Math.max(0, 15 - effectiveVesselDiameterUm) / 10) * 60 +
         (1 / membraneDeformabilityKpa) * 15 +
         selectinIntegrinAffinity * 30 * (activeIntervention === 'anti_integrin' ? 0.25 : 1.0)
       )
@@ -136,7 +191,7 @@ export const CirculatoryMicrodynamicsStage: React.FC<CirculatoryMicrodynamicsPro
     Number(clusterProtectionMultiplier)
   ).toFixed(1);
 
-  // Initialize Canvas Particles
+  // Initialize Canvas Particles (Once)
   useEffect(() => {
     const particles: Particle[] = [];
     for (let i = 0; i < 40; i++) {
@@ -166,23 +221,40 @@ export const CirculatoryMicrodynamicsStage: React.FC<CirculatoryMicrodynamicsPro
       });
     }
     for (let i = 65; i < 75; i++) {
-      const isCluster = Math.random() < ctcClusterFraction / 100;
       particles.push({
         id: i,
-        type: isCluster ? 'ctc_cluster' : 'ctc_single',
+        type: 'ctc_single',
         x: Math.random() * 600,
         y: 50 + Math.random() * 100,
         vx: 1.8 + Math.random() * 1.2,
         vy: (Math.random() - 0.5) * 0.3,
-        radius: isCluster ? 12 : 8,
+        radius: 8,
         health: 100,
-        clusterSize: isCluster ? clusterMeanSize : 1,
-        isCloaked: Math.random() < plateletCloakingLevel / 100,
+        clusterSize: 1,
+        isCloaked: false,
         shearAccumulated: 0
       });
     }
     particlesRef.current = particles;
-  }, [ctcClusterFraction, clusterMeanSize, plateletCloakingLevel]);
+  }, []);
+
+  // Update particles in place when parameters change
+  useEffect(() => {
+    let ctcIndex = 0;
+    const totalCtcs = 10;
+    const targetClusters = Math.round((ctcClusterFraction / 100) * totalCtcs);
+
+    particlesRef.current.forEach((p) => {
+      if (p.id >= 65 && p.id < 75) {
+        const isCluster = ctcIndex < targetClusters;
+        p.type = isCluster ? 'ctc_cluster' : 'ctc_single';
+        p.radius = isCluster ? 12 : 8;
+        p.clusterSize = isCluster ? clusterMeanSize : 1;
+        p.isCloaked = activeIntervention === 'antiplatelet_aspirin' ? false : Math.random() < (plateletCloakingLevel / 100);
+        ctcIndex++;
+      }
+    });
+  }, [ctcClusterFraction, plateletCloakingLevel, activeIntervention, clusterMeanSize]);
 
   // Main Canvas Render & Physics Loop
   useEffect(() => {
@@ -402,7 +474,7 @@ export const CirculatoryMicrodynamicsStage: React.FC<CirculatoryMicrodynamicsPro
       ctx.fillText(`FLOW: ${effectiveShearStress} dyn/cm² | ${cardiacOutputLpm} L/min`, 16, 26);
       ctx.fillStyle = '#94a3b8';
       ctx.font = '9px monospace';
-      ctx.fillText(`VESSEL: ${vesselCompartment.toUpperCase()} (Ø ${vesselDiameterUm} μm)`, 16, 40);
+      ctx.fillText(`VESSEL: ${vesselCompartment.toUpperCase()} (Ø ${effectiveVesselDiameterUm.toFixed(1)} μm)`, 16, 40);
       ctx.fillText(`TARGET: ${targetOrganSite.toUpperCase()} NICHE`, 16, 52);
 
       animFrameIdRef.current = requestAnimationFrame(render);
@@ -412,14 +484,14 @@ export const CirculatoryMicrodynamicsStage: React.FC<CirculatoryMicrodynamicsPro
     return () => {
       if (animFrameIdRef.current) cancelAnimationFrame(animFrameIdRef.current);
     };
-  }, [isPlaying, simSpeed, effectiveShearStress, cardiacOutputLpm, vesselCompartment, vesselDiameterUm, targetOrganSite, membraneDeformabilityKpa]);
+  }, [isPlaying, simSpeed, effectiveShearStress, cardiacOutputLpm, vesselCompartment, effectiveVesselDiameterUm, targetOrganSite, membraneDeformabilityKpa]);
 
   // Periodic Telemetry Update
   useEffect(() => {
     const interval = setInterval(() => {
       if (!isPlaying) return;
 
-      setElapsedSeconds((prev) => prev + 1);
+      timeRef.current += 1;
 
       const newInflow = Math.round(ctcInflowRate / 60);
       const survivalRateSingle = Math.max(0.01, 0.45 - Number(effectiveShearStress) * 0.02);
@@ -435,18 +507,18 @@ export const CirculatoryMicrodynamicsStage: React.FC<CirculatoryMicrodynamicsPro
 
       setTelemetryHistory((prev) => {
         const nextPoint = {
-          timeSec: prev.length * 2,
+          timeSec: timeRef.current,
           singleCtcSurvival: Math.round(survivalRateSingle * 100),
           clusterSurvival: Math.round(survivalRateCluster * 100),
           shearStress: parseFloat(effectiveShearStress),
           organArrestRate: mechanicalArrestProbability
         };
-        return [...prev.slice(-24), nextPoint];
+        return [...prev.slice(-48), nextPoint];
       });
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [isPlaying, ctcInflowRate, effectiveShearStress, clusterMeanSize, mechanicalArrestProbability]);
+  }, [isPlaying, effectiveShearStress, mechanicalArrestProbability, ctcInflowRate, clusterMeanSize]);
 
   const handleSelectOrganPreset = (organ: OrganSite) => {
     setTargetOrganSite(organ);
@@ -472,7 +544,7 @@ export const CirculatoryMicrodynamicsStage: React.FC<CirculatoryMicrodynamicsPro
   return (
     <div className="space-y-6">
       {/* Metrics Row */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 gap-3">
         <div className="bg-slate-900 p-3 rounded-xl border border-slate-800">
           <span className="text-[10px] font-mono text-slate-400 block">WALL SHEAR STRESS (τw)</span>
           <span className="text-lg font-bold text-rose-400 font-mono">{effectiveShearStress} <span className="text-xs font-normal text-slate-500">dyn/cm²</span></span>
@@ -496,6 +568,14 @@ export const CirculatoryMicrodynamicsStage: React.FC<CirculatoryMicrodynamicsPro
         <div className="bg-slate-900 p-3 rounded-xl border border-slate-800">
           <span className="text-[10px] font-mono text-slate-400 block">ORGAN SEEDED</span>
           <span className="text-lg font-bold text-purple-400 font-mono">{totalArrestedOrgan.toLocaleString()}</span>
+        </div>
+        <div className="bg-slate-900 p-3 rounded-xl border border-slate-800">
+          <span className="text-[10px] font-mono text-slate-400 block">ACTIVE SURVIVING</span>
+          <span className="text-lg font-bold text-emerald-400 font-mono">{totalSurviving.toLocaleString()}</span>
+        </div>
+        <div className="bg-slate-900 p-3 rounded-xl border border-slate-800">
+          <span className="text-[10px] font-mono text-slate-400 block">SHEAR DESTROYED</span>
+          <span className="text-lg font-bold text-rose-400 font-mono">{totalDestroyedShear.toLocaleString()}</span>
         </div>
       </div>
 
@@ -553,6 +633,7 @@ export const CirculatoryMicrodynamicsStage: React.FC<CirculatoryMicrodynamicsPro
                 ].map((org) => (
                   <button
                     key={org.id}
+                    type="button"
                     onClick={() => handleSelectOrganPreset(org.id as OrganSite)}
                     className={`p-2 rounded-xl text-left border text-xs font-mono transition-all ${
                       targetOrganSite === org.id
@@ -607,89 +688,59 @@ export const CirculatoryMicrodynamicsStage: React.FC<CirculatoryMicrodynamicsPro
             </div>
 
             {/* Cardiac Output */}
-            <div className="space-y-1 text-xs">
-              <div className="flex justify-between text-slate-300">
-                <span>Cardiac Output (CO):</span>
-                <span className="font-mono font-bold text-cyan-400">{cardiacOutputLpm.toFixed(1)} L/min</span>
-              </div>
-              <input
-                type="range"
-                min="3.0"
-                max="8.0"
-                step="0.2"
-                value={cardiacOutputLpm}
-                onChange={(e) => setCardiacOutputLpm(parseFloat(e.target.value))}
-                className="w-full accent-cyan-500 bg-slate-950 rounded h-1.5"
-              />
-            </div>
+            <Slider
+  label="Cardiac Output (CO):"
+  min={3.0}
+  max={8.0}
+  step={0.2}
+  value={cardiacOutputLpm}
+  onChange={setCardiacOutputLpm}
+  valueDisplay={<>{cardiacOutputLpm.toFixed(1)} L/min</>}
+/>
 
             {/* Vessel Diameter */}
-            <div className="space-y-1 text-xs">
-              <div className="flex justify-between text-slate-300">
-                <span>Capillary Lumen Caliber (Ø):</span>
-                <span className="font-mono font-bold text-rose-400">{vesselDiameterUm.toFixed(1)} μm</span>
-              </div>
-              <input
-                type="range"
-                min="4.0"
-                max="25.0"
-                step="0.5"
-                value={vesselDiameterUm}
-                onChange={(e) => setVesselDiameterUm(parseFloat(e.target.value))}
-                className="w-full accent-rose-500 bg-slate-950 rounded h-1.5"
-              />
-            </div>
+            <Slider
+  label="Capillary Lumen Caliber (Ø):"
+  min={4.0}
+  max={25.0}
+  step={0.5}
+  value={vesselDiameterUm}
+  onChange={setVesselDiameterUm}
+  valueDisplay={<>{vesselDiameterUm.toFixed(1)} μm</>}
+/>
 
             {/* Cluster Fraction */}
-            <div className="space-y-1 text-xs">
-              <div className="flex justify-between text-slate-300">
-                <span>CTC Cluster Proportion:</span>
-                <span className="font-mono font-bold text-purple-400">{ctcClusterFraction}%</span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="80"
-                step="5"
-                value={ctcClusterFraction}
-                onChange={(e) => setCtcClusterFraction(parseInt(e.target.value))}
-                className="w-full accent-purple-500 bg-slate-950 rounded h-1.5"
-              />
-            </div>
+            <Slider
+  label="CTC Cluster Proportion:"
+  min={0}
+  max={80}
+  step={5}
+  value={ctcClusterFraction}
+  onChange={setCtcClusterFraction}
+  valueDisplay={<>{ctcClusterFraction}%</>}
+/>
 
             {/* Platelet Cloaking */}
-            <div className="space-y-1 text-xs">
-              <div className="flex justify-between text-slate-300">
-                <span>Platelet / Fibrin Cloaking:</span>
-                <span className="font-mono font-bold text-emerald-400">{plateletCloakingLevel}%</span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                step="5"
-                value={plateletCloakingLevel}
-                onChange={(e) => setPlateletCloakingLevel(parseInt(e.target.value))}
-                className="w-full accent-emerald-500 bg-slate-950 rounded h-1.5"
-              />
-            </div>
+            <Slider
+  label="Platelet / Fibrin Cloaking:"
+  min={0}
+  max={100}
+  step={5}
+  value={plateletCloakingLevel}
+  onChange={setPlateletCloakingLevel}
+  valueDisplay={<>{plateletCloakingLevel}%</>}
+/>
 
             {/* Membrane Deformability */}
-            <div className="space-y-1 text-xs">
-              <div className="flex justify-between text-slate-300">
-                <span>Cell Deformability Modulus (E):</span>
-                <span className="font-mono font-bold text-amber-400">{membraneDeformabilityKpa} kPa</span>
-              </div>
-              <input
-                type="range"
-                min="0.2"
-                max="2.5"
-                step="0.1"
-                value={membraneDeformabilityKpa}
-                onChange={(e) => setMembraneDeformabilityKpa(parseFloat(e.target.value))}
-                className="w-full accent-amber-500 bg-slate-950 rounded h-1.5"
-              />
-            </div>
+            <Slider
+  label="Cell Deformability Modulus (E):"
+  min={0.2}
+  max={2.5}
+  step={0.1}
+  value={membraneDeformabilityKpa}
+  onChange={setMembraneDeformabilityKpa}
+  valueDisplay={<>{membraneDeformabilityKpa} kPa</>}
+/>
           </div>
 
           {/* Pharmacological Interventions Panel */}
@@ -709,7 +760,8 @@ export const CirculatoryMicrodynamicsStage: React.FC<CirculatoryMicrodynamicsPro
               ].map((tx) => (
                 <button
                   key={tx.id}
-                  onClick={() => setActiveIntervention(tx.id as any)}
+                  type="button"
+                  onClick={() => setActiveIntervention(tx.id as InterventionType)}
                   className={`w-full p-3 rounded-xl text-left border text-xs transition-all ${
                     activeIntervention === tx.id
                       ? 'bg-emerald-950/60 border-emerald-500 text-emerald-200 shadow-md'

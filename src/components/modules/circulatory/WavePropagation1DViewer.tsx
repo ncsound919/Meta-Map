@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { Slider } from '../../ui/Slider';
+
 import {
   GitBranch,
   Activity,
@@ -208,56 +210,26 @@ export const WavePropagation1DViewer: React.FC = () => {
             </div>
 
             {/* Aortic Stiffness Beta */}
-            <div className="space-y-1 text-xs">
-              <div className="flex justify-between text-slate-300">
-                <span>Stiffness Index ($\beta$):</span>
-                <span className="font-mono font-bold text-cyan-400">{aorticStiffnessBeta.toFixed(1)}</span>
-              </div>
-              <input
-                type="range"
-                min="3.0"
-                max="15.0"
-                step="0.5"
-                value={aorticStiffnessBeta}
-                onChange={(e) => setAorticStiffnessBeta(parseFloat(e.target.value))}
-                className="w-full accent-cyan-500 bg-slate-950 rounded h-1.5"
-              />
-              <span className="text-[10px] text-slate-500 block">3.0 (compliant young) $\to$ 15.0 (calcified elder)</span>
-            </div>
-
-            {/* Reflection Coefficient Gamma */}
-            <div className="space-y-1 text-xs">
-              <div className="flex justify-between text-slate-300">
-                <span>Bifurcation Reflection ($\Gamma$):</span>
-                <span className="font-mono font-bold text-rose-400">{peripheralReflectionCoeffGamma.toFixed(2)}</span>
-              </div>
-              <input
-                type="range"
-                min="0.1"
-                max="0.75"
-                step="0.05"
-                value={peripheralReflectionCoeffGamma}
-                onChange={(e) => setPeripheralReflectionCoeffGamma(parseFloat(e.target.value))}
-                className="w-full accent-rose-500 bg-slate-950 rounded h-1.5"
-              />
-            </div>
+            <Slider
+  label="Stiffness Index ($\beta$):"
+  min={3.0}
+  max={15.0}
+  step={0.5}
+  value={aorticStiffnessBeta}
+  onChange={setAorticStiffnessBeta}
+  valueDisplay={<>{aorticStiffnessBeta.toFixed(1)}</>}
+/>
 
             {/* Tree Length */}
-            <div className="space-y-1 text-xs">
-              <div className="flex justify-between text-slate-300">
-                <span>Arterial Tree Length ($L$):</span>
-                <span className="font-mono font-bold text-emerald-400">{arterialTreeLengthCm} cm</span>
-              </div>
-              <input
-                type="range"
-                min="70"
-                max="130"
-                step="5"
-                value={arterialTreeLengthCm}
-                onChange={(e) => setArterialTreeLengthCm(parseInt(e.target.value))}
-                className="w-full accent-emerald-500 bg-slate-950 rounded h-1.5"
-              />
-            </div>
+            <Slider
+  label="Arterial Tree Length ($L$):"
+  min={70}
+  max={130}
+  step={5}
+  value={arterialTreeLengthCm}
+  onChange={setArterialTreeLengthCm}
+  valueDisplay={<>{arterialTreeLengthCm} cm</>}
+/>
           </div>
 
           {/* Governing 1D Equations */}

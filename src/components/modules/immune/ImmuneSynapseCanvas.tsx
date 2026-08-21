@@ -272,14 +272,14 @@ export const ImmuneSynapseCanvas: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2">
-          <button
+          <button type="button"
             onClick={() => setIsRunning(!isRunning)}
             className="p-2 rounded-lg bg-slate-800 border border-slate-700 text-slate-200 hover:bg-slate-700 text-xs font-mono flex items-center gap-1.5"
           >
             {isRunning ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
             {isRunning ? 'Pause Canvas' : 'Play Canvas'}
           </button>
-          <button
+          <button type="button"
             onClick={triggerDegranulation}
             className="px-3 py-2 rounded-lg bg-rose-500 hover:bg-rose-400 text-slate-950 font-bold text-xs font-mono flex items-center gap-1.5 shadow-md shadow-rose-950"
           >
@@ -311,7 +311,7 @@ export const ImmuneSynapseCanvas: React.FC = () => {
 
       {/* Interactive Checkpoint Toggles */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
-        <button
+        <button type="button"
           onClick={() => setAntiPd1Active(!antiPd1Active)}
           className={`p-3 rounded-xl border text-left transition-all space-y-1 ${
             antiPd1Active
@@ -332,7 +332,7 @@ export const ImmuneSynapseCanvas: React.FC = () => {
           </p>
         </button>
 
-        <button
+        <button type="button"
           onClick={() => setAntiCtla4Active(!antiCtla4Active)}
           className={`p-3 rounded-xl border text-left transition-all space-y-1 ${
             antiCtla4Active
@@ -353,7 +353,7 @@ export const ImmuneSynapseCanvas: React.FC = () => {
           </p>
         </button>
 
-        <button
+        <button type="button"
           onClick={() => setAntiCd47Active(!antiCd47Active)}
           className={`p-3 rounded-xl border text-left transition-all space-y-1 ${
             antiCd47Active

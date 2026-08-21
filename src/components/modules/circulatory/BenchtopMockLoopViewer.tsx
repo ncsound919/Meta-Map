@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { Slider } from '../../ui/Slider';
+
 import {
   Cpu,
   Activity,
@@ -184,56 +186,38 @@ export const BenchtopMockLoopViewer: React.FC = () => {
 
             {/* LVAD RPM if continuous */}
             {pumpType === 'continuous_cf_lvad' && (
-              <div className="space-y-1 text-xs">
-                <div className="flex justify-between text-slate-300">
-                  <span>Impeller Speed (RPM):</span>
-                  <span className="font-mono font-bold text-cyan-400">{lvadSpeedRpm} RPM</span>
-                </div>
-                <input
-                  type="range"
-                  min="7000"
-                  max="12000"
-                  step="200"
-                  value={lvadSpeedRpm}
-                  onChange={(e) => setLvadSpeedRpm(parseInt(e.target.value))}
-                  className="w-full accent-cyan-500 bg-slate-950 rounded h-1.5"
-                />
-              </div>
+              <Slider
+  label="Impeller Speed (RPM):"
+  min={7000}
+  max={12000}
+  step={200}
+  value={lvadSpeedRpm}
+  onChange={setLvadSpeedRpm}
+  valueDisplay={<>{lvadSpeedRpm} RPM</>}
+/>
             )}
 
             {/* Compliance Air Buffer */}
-            <div className="space-y-1 text-xs">
-              <div className="flex justify-between text-slate-300">
-                <span>Compliance Air Volume:</span>
-                <span className="font-mono font-bold text-purple-400">{complianceChamberAirMl} mL</span>
-              </div>
-              <input
-                type="range"
-                min="100"
-                max="800"
-                step="50"
-                value={complianceChamberAirMl}
-                onChange={(e) => setComplianceChamberAirMl(parseInt(e.target.value))}
-                className="w-full accent-purple-500 bg-slate-950 rounded h-1.5"
-              />
-            </div>
+            <Slider
+  label="Compliance Air Volume:"
+  min={100}
+  max={800}
+  step={50}
+  value={complianceChamberAirMl}
+  onChange={setComplianceChamberAirMl}
+  valueDisplay={<>{complianceChamberAirMl} mL</>}
+/>
 
             {/* Throttle Resistance */}
-            <div className="space-y-1 text-xs">
-              <div className="flex justify-between text-slate-300">
-                <span>Peripheral Throttle Resistance:</span>
-                <span className="font-mono font-bold text-emerald-400">{throttleValveResistanceR.toFixed(2)} PRU</span>
-              </div>
-              <input
-                type="range"
-                min="0.5"
-                max="2.5"
-                step="0.05"
-                value={throttleValveResistanceR}
-                onChange={(e) => setThrottleValveResistanceR(parseFloat(e.target.value))}
-                className="w-full accent-emerald-500 bg-slate-950 rounded h-1.5"
-              />
-            </div>
+            <Slider
+  label="Peripheral Throttle Resistance:"
+  min={0.5}
+  max={2.5}
+  step={0.05}
+  value={throttleValveResistanceR}
+  onChange={setThrottleValveResistanceR}
+  valueDisplay={<>{throttleValveResistanceR.toFixed(2)} PRU</>}
+/>
 
             {/* Blood Analog Fluid Selection */}
             <div className="space-y-1 text-xs">

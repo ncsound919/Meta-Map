@@ -6,12 +6,12 @@ import {
   Plus,
   Flame,
   Shield,
-  Layers,
-  Sparkles,
-  Info,
-  Maximize2
+  Layers
 } from 'lucide-react';
 import { OrganSite } from '../../../types/metastasis';
+
+const CANVAS_WIDTH = 720;
+const CANVAS_HEIGHT = 360;
 
 interface LiveNicheCanvasProps {
   selectedOrgan: string;
@@ -41,6 +41,12 @@ export const LiveNicheCanvas: React.FC<LiveNicheCanvasProps> = ({
   const [therapyActive, setTherapyActive] = useState<boolean>(false);
   const [inflammationFlare, setInflammationFlare] = useState<boolean>(false);
   const [stats, setStats] = useState({ dormant: 12, active: 3, stroma: 24, ecmStiffness: 5.2 });
+
+  const interventionRef = useRef({ therapyActive, inflammationFlare });
+
+  useEffect(() => {
+    interventionRef.current = { therapyActive, inflammationFlare };
+  }, [therapyActive, inflammationFlare]);
 
   // Initialize cells based on selected organ
   useEffect(() => {
@@ -176,14 +182,14 @@ export const LiveNicheCanvas: React.FC<LiveNicheCanvasProps> = ({
             if (nextY < 65 || nextY > canvas.height - 15) cell.vy *= -1;
 
             // Inflammation trigger: dormant cells awaken
-            if (inflammationFlare && cell.type === 'dormant_dtc' && Math.random() < 0.008) {
+            if (interventionRef.current.inflammationFlare && cell.type === 'dormant_dtc' && Math.random() < 0.008) {
               nextType = 'active_met';
               nextState = 'Awakened (Inflammation Flare)';
               nextRadius = 9;
             }
 
             // Therapy trigger: active metastases arrested or cleared
-            if (therapyActive && cell.type === 'active_met' && Math.random() < 0.012) {
+            if (interventionRef.current.therapyActive && cell.type === 'active_met' && Math.random() < 0.012) {
               nextType = 'dormant_dtc';
               nextState = 'Arrested by Interception Rx';
               nextRadius = 6;
@@ -274,7 +280,7 @@ export const LiveNicheCanvas: React.FC<LiveNicheCanvasProps> = ({
     return () => {
       cancelAnimationFrame(animationFrameId);
     };
-  }, [isRunning, selectedOrgan, therapyActive, inflammationFlare]);
+  }, [isRunning, selectedOrgan]); // Removed therapyActive and inflammationFlare
 
   const handleAddDtc = () => {
     setCells((prev) => [
@@ -340,9 +346,10 @@ export const LiveNicheCanvas: React.FC<LiveNicheCanvasProps> = ({
       <div className="relative rounded-xl overflow-hidden border border-slate-800 bg-slate-950 shadow-inner">
         <canvas
           ref={canvasRef}
-          width={720}
-          height={360}
-          className="w-full h-auto block"
+          width={CANVAS_WIDTH}
+          height={CANVAS_HEIGHT}
+          className="w-full block"
+          style={{ height: 'auto' }}
         />
 
         {/* Overlay Badges */}
@@ -370,6 +377,7 @@ export const LiveNicheCanvas: React.FC<LiveNicheCanvasProps> = ({
       <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
         <div className="flex flex-wrap items-center gap-2">
           <button
+            type="button"
             onClick={() => setIsRunning(!isRunning)}
             className={`px-3 py-1.5 rounded-lg border text-xs font-mono font-bold flex items-center gap-1.5 transition-all ${
               isRunning
@@ -382,6 +390,7 @@ export const LiveNicheCanvas: React.FC<LiveNicheCanvasProps> = ({
           </button>
 
           <button
+            type="button"
             onClick={handleAddDtc}
             className="px-3 py-1.5 rounded-lg border border-cyan-700/80 bg-cyan-950/70 text-cyan-300 hover:bg-cyan-900 text-xs font-mono font-bold flex items-center gap-1.5 transition-all"
           >
@@ -389,6 +398,8 @@ export const LiveNicheCanvas: React.FC<LiveNicheCanvasProps> = ({
           </button>
 
           <button
+            type="button"
+            aria-pressed={inflammationFlare}
             onClick={() => setInflammationFlare(!inflammationFlare)}
             className={`px-3 py-1.5 rounded-lg border text-xs font-mono font-bold flex items-center gap-1.5 transition-all ${
               inflammationFlare
@@ -401,6 +412,8 @@ export const LiveNicheCanvas: React.FC<LiveNicheCanvasProps> = ({
           </button>
 
           <button
+            type="button"
+            aria-pressed={therapyActive}
             onClick={() => setTherapyActive(!therapyActive)}
             className={`px-3 py-1.5 rounded-lg border text-xs font-mono font-bold flex items-center gap-1.5 transition-all ${
               therapyActive
@@ -414,6 +427,7 @@ export const LiveNicheCanvas: React.FC<LiveNicheCanvasProps> = ({
         </div>
 
         <button
+          type="button"
           onClick={handleResetCanvas}
           className="px-3 py-1.5 rounded-lg border border-slate-800 bg-slate-950 text-slate-400 hover:text-slate-200 text-xs font-mono flex items-center gap-1.5 transition-all"
         >

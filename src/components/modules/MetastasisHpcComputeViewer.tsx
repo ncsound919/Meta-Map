@@ -1,3 +1,4 @@
+import { Slider } from '../ui/Slider';
 import React, { useState, useEffect } from 'react';
 import {
   Cpu,
@@ -374,69 +375,45 @@ export const MetastasisHpcComputeViewer: React.FC<MetastasisHpcComputeViewerProp
                 </span>
               </div>
 
-              <div>
-                <label className="text-xs text-slate-300 flex justify-between">
-                  <span>Spatial Grid Resolution:</span>
-                  <span className="font-mono text-cyan-400">{gridResolution} &times; {gridResolution} nodes</span>
-                </label>
-                <input
-                  type="range"
-                  min={16}
-                  max={48}
-                  step={8}
-                  value={gridResolution}
-                  onChange={e => setGridResolution(Number(e.target.value))}
-                  className="w-full mt-1 accent-cyan-500 bg-slate-800"
-                />
-              </div>
+              <Slider
+  label="Spatial Grid Resolution:"
+  min={16}
+  max={48}
+  step={8}
+  value={gridResolution}
+  onChange={setGridResolution}
+  valueDisplay={<>{gridResolution} &times; {gridResolution} nodes</>}
+/>
 
-              <div>
-                <label className="text-xs text-slate-300 flex justify-between">
-                  <span>Hypoxia pO₂ Threshold:</span>
-                  <span className="font-mono text-cyan-400">{hypoxiaThreshold} mmHg</span>
-                </label>
-                <input
-                  type="range"
-                  min={5}
-                  max={25}
-                  step={1}
-                  value={hypoxiaThreshold}
-                  onChange={e => setHypoxiaThreshold(Number(e.target.value))}
-                  className="w-full mt-1 accent-cyan-500 bg-slate-800"
-                />
-              </div>
+              <Slider
+  label="Hypoxia pO₂ Threshold:"
+  min={5}
+  max={25}
+  step={1}
+  value={hypoxiaThreshold}
+  onChange={setHypoxiaThreshold}
+  valueDisplay={<>{hypoxiaThreshold} mmHg</>}
+/>
 
-              <div>
-                <label className="text-xs text-slate-300 flex justify-between">
-                  <span>Matrix Baseline Stiffness:</span>
-                  <span className="font-mono text-purple-400">{matrixStiffnessBase} kPa</span>
-                </label>
-                <input
-                  type="range"
-                  min={10}
-                  max={60}
-                  step={5}
-                  value={matrixStiffnessBase}
-                  onChange={e => setMatrixStiffnessBase(Number(e.target.value))}
-                  className="w-full mt-1 accent-purple-500 bg-slate-800"
-                />
-              </div>
+              <Slider
+  label="Matrix Baseline Stiffness:"
+  min={10}
+  max={60}
+  step={5}
+  value={matrixStiffnessBase}
+  onChange={setMatrixStiffnessBase}
+  valueDisplay={<>{matrixStiffnessBase} kPa</>}
+/>
 
-              <div>
-                <label className="text-xs text-slate-300 flex justify-between">
-                  <span>Integration Time Steps:</span>
-                  <span className="font-mono text-amber-400">{timeSteps} steps (&Delta;t = 0.1s)</span>
-                </label>
-                <input
-                  type="range"
-                  min={10}
-                  max={60}
-                  step={5}
-                  value={timeSteps}
-                  onChange={e => setTimeSteps(Number(e.target.value))}
-                  className="w-full mt-1 accent-amber-500 bg-slate-800"
-                />
-              </div>
+              <Slider
+  label="Integration Time Steps:"
+  min={10}
+  max={60}
+  step={5}
+  value={timeSteps}
+  onChange={setTimeSteps}
+  valueDisplay={<>{timeSteps} steps (&Delta;t = 0.1s)</>}
+/>
 
               <div className="pt-2 border-t border-slate-800">
                 <span className="text-xs text-slate-400 block mb-2">Active Scalar Field Slice:</span>
@@ -548,37 +525,25 @@ export const MetastasisHpcComputeViewer: React.FC<MetastasisHpcComputeViewerProp
                 LBM CFD Hydrodynamic Parameters
               </h3>
 
-              <div>
-                <label className="text-xs text-slate-300 flex justify-between">
-                  <span>Inlet Velocity:</span>
-                  <span className="font-mono text-blue-400">{inletVelocity} &micro;m/s</span>
-                </label>
-                <input
-                  type="range"
-                  min={100}
-                  max={600}
-                  step={50}
-                  value={inletVelocity}
-                  onChange={e => setInletVelocity(Number(e.target.value))}
-                  className="w-full mt-1 accent-blue-500 bg-slate-800"
-                />
-              </div>
+              <Slider
+  label="Inlet Velocity:"
+  min={100}
+  max={600}
+  step={50}
+  value={inletVelocity}
+  onChange={setInletVelocity}
+  valueDisplay={<>{inletVelocity} &micro;m/s</>}
+/>
 
-              <div>
-                <label className="text-xs text-slate-300 flex justify-between">
-                  <span>Microvascular Constriction Ratio:</span>
-                  <span className="font-mono text-rose-400">{(constrictionRatio * 100).toFixed(0)}%</span>
-                </label>
-                <input
-                  type="range"
-                  min={0.1}
-                  max={0.7}
-                  step={0.05}
-                  value={constrictionRatio}
-                  onChange={e => setConstrictionRatio(Number(e.target.value))}
-                  className="w-full mt-1 accent-rose-500 bg-slate-800"
-                />
-              </div>
+              <Slider
+  label="Microvascular Constriction Ratio:"
+  min={0.1}
+  max={0.7}
+  step={0.05}
+  value={constrictionRatio}
+  onChange={setConstrictionRatio}
+  valueDisplay={<>{(constrictionRatio * 100).toFixed(0)}%</>}
+/>
 
               <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 space-y-2 text-xs font-mono">
                 <div className="flex justify-between text-slate-300">

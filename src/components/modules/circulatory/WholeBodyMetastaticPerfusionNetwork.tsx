@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { Slider } from '../../ui/Slider';
+
 import {
   Heart,
   Activity,
@@ -353,38 +355,26 @@ export const WholeBodyMetastaticPerfusionNetwork: React.FC = () => {
             </div>
 
             {/* Injected CTC Bolus Slider */}
-            <div className="space-y-1">
-              <div className="flex justify-between text-xs font-mono">
-                <span className="text-slate-300">Injected CTC Inoculum:</span>
-                <span className="text-rose-400 font-bold">{injectedCtcBolus.toLocaleString()} CTCs</span>
-              </div>
-              <input
-                type="range"
-                min="10000"
-                max="500000"
-                step="10000"
-                value={injectedCtcBolus}
-                onChange={(e) => setInjectedCtcBolus(Number(e.target.value))}
-                className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-rose-400"
-              />
-            </div>
+            <Slider
+  label="Injected CTC Inoculum:"
+  min={10000}
+  max={500000}
+  step={10000}
+  value={injectedCtcBolus}
+  onChange={setInjectedCtcBolus}
+  valueDisplay={<>{injectedCtcBolus.toLocaleString()} CTCs</>}
+/>
 
             {/* Cardiac Output Slider */}
-            <div className="space-y-1">
-              <div className="flex justify-between text-xs font-mono">
-                <span className="text-slate-300">Cardiac Output (CO):</span>
-                <span className="text-cyan-400 font-bold">{cardiacOutputLMin.toFixed(1)} L/min</span>
-              </div>
-              <input
-                type="range"
-                min="3.5"
-                max="8.0"
-                step="0.1"
-                value={cardiacOutputLMin}
-                onChange={(e) => setCardiacOutputLMin(Number(e.target.value))}
-                className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-400"
-              />
-            </div>
+            <Slider
+  label="Cardiac Output (CO):"
+  min={3.5}
+  max={8.0}
+  step={0.1}
+  value={cardiacOutputLMin}
+  onChange={setCardiacOutputLMin}
+  valueDisplay={<>{cardiacOutputLMin.toFixed(1)} L/min</>}
+/>
 
             {/* Batson's Vertebral Plexus Retrograde Shunt Toggle */}
             <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 space-y-2">

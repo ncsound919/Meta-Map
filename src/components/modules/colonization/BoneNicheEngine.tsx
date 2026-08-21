@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { Slider } from '../../ui/Slider';
+
 import {
   Bone,
   Brain,
@@ -213,72 +215,48 @@ export const BoneNicheEngine: React.FC = () => {
             </div>
 
             {/* RANKL / OPG Ratio */}
-            <div className="space-y-1 text-xs">
-              <div className="flex justify-between text-slate-300">
-                <span>RANKL to OPG Ratio:</span>
-                <span className="font-mono font-bold text-amber-400">{ranklToOpgRatio.toFixed(1)}x</span>
-              </div>
-              <input
-                type="range"
-                min="0.5"
-                max="8.0"
-                step="0.2"
-                value={ranklToOpgRatio}
-                onChange={(e) => setRanklToOpgRatio(parseFloat(e.target.value))}
-                className="w-full accent-amber-500 bg-slate-950 rounded h-1.5"
-              />
-            </div>
+            <Slider
+  label="RANKL to OPG Ratio:"
+  min={0.5}
+  max={8.0}
+  step={0.2}
+  value={ranklToOpgRatio}
+  onChange={setRanklToOpgRatio}
+  valueDisplay={<>{ranklToOpgRatio.toFixed(1)}x</>}
+/>
 
             {/* Osteoclast Activity */}
-            <div className="space-y-1 text-xs">
-              <div className="flex justify-between text-slate-300">
-                <span>Osteoclast Basal Activity:</span>
-                <span className="font-mono font-bold text-rose-400">{osteoclastActivity}%</span>
-              </div>
-              <input
-                type="range"
-                min="10"
-                max="100"
-                step="5"
-                value={osteoclastActivity}
-                onChange={(e) => setOsteoclastActivity(parseInt(e.target.value))}
-                className="w-full accent-rose-500 bg-slate-950 rounded h-1.5"
-              />
-            </div>
+            <Slider
+  label="Osteoclast Basal Activity:"
+  min={10}
+  max={100}
+  step={5}
+  value={osteoclastActivity}
+  onChange={setOsteoclastActivity}
+  valueDisplay={<>{osteoclastActivity}%</>}
+/>
 
             {/* Matrix TGF-beta Concentration */}
-            <div className="space-y-1 text-xs">
-              <div className="flex justify-between text-slate-300">
-                <span>Matrix-Bound TGF-β Reservoir:</span>
-                <span className="font-mono font-bold text-purple-400">{tgfBetaConcentration} ng/mL</span>
-              </div>
-              <input
-                type="range"
-                min="10"
-                max="120"
-                step="5"
-                value={tgfBetaConcentration}
-                onChange={(e) => setTgfBetaConcentration(parseInt(e.target.value))}
-                className="w-full accent-purple-500 bg-slate-950 rounded h-1.5"
-              />
-            </div>
+            <Slider
+  label="Matrix-Bound TGF-β Reservoir:"
+  min={10}
+  max={120}
+  step={5}
+  value={tgfBetaConcentration}
+  onChange={setTgfBetaConcentration}
+  valueDisplay={<>{tgfBetaConcentration} ng/mL</>}
+/>
 
             {/* CaSR Sensor */}
-            <div className="space-y-1 text-xs">
-              <div className="flex justify-between text-slate-300">
-                <span>Calcium-Sensing Receptor (CaSR):</span>
-                <span className="font-mono font-bold text-cyan-400">{calciumSensingCaSr}%</span>
-              </div>
-              <input
-                type="range"
-                min="20"
-                max="100"
-                step="5"
-                value={calciumSensingCaSr}
-                onChange={(e) => setCalciumSensingCaSr(parseInt(e.target.value))}
-                className="w-full accent-cyan-500 bg-slate-950 rounded h-1.5"
-              />
-            </div>
+            <Slider
+  label="Calcium-Sensing Receptor (CaSR):"
+  min={20}
+  max={100}
+  step={5}
+  value={calciumSensingCaSr}
+  onChange={setCalciumSensingCaSr}
+  valueDisplay={<>{calciumSensingCaSr}%</>}
+/>
           </div>
 
           {/* Targeted Bone Niche Therapeutics */}

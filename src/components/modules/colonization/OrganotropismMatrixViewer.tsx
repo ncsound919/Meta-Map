@@ -1,18 +1,8 @@
 import React, { useState } from 'react';
 import {
-  Globe,
-  Bone,
-  Brain,
-  Activity,
-  Layers,
-  Sparkles,
-  Info,
-  CheckCircle2,
-  AlertTriangle,
-  ChevronRight,
   Database
 } from 'lucide-react';
-import { PrimaryCancerType, OrganSite } from '../../../types/metastasis';
+import { OrganSite } from '../../../types/metastasis';
 
 interface OrganotropismMatrixViewerProps {
   selectedOrgan: string;
@@ -188,6 +178,7 @@ export const OrganotropismMatrixViewer: React.FC<OrganotropismMatrixViewerProps>
         {/* Quick Organ Filter Links */}
         <div className="flex items-center gap-1.5 bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs font-mono">
           <button
+            type="button"
             onClick={() => onSelectOrgan('bone')}
             className={`px-2.5 py-1 rounded-lg transition-all ${
               selectedOrgan === 'bone' ? 'bg-amber-500 text-slate-950 font-bold' : 'text-slate-400 hover:text-white'
@@ -196,6 +187,7 @@ export const OrganotropismMatrixViewer: React.FC<OrganotropismMatrixViewerProps>
             Bone
           </button>
           <button
+            type="button"
             onClick={() => onSelectOrgan('brain')}
             className={`px-2.5 py-1 rounded-lg transition-all ${
               selectedOrgan === 'brain' ? 'bg-indigo-500 text-white font-bold' : 'text-slate-400 hover:text-white'
@@ -204,6 +196,7 @@ export const OrganotropismMatrixViewer: React.FC<OrganotropismMatrixViewerProps>
             Brain
           </button>
           <button
+            type="button"
             onClick={() => onSelectOrgan('liver')}
             className={`px-2.5 py-1 rounded-lg transition-all ${
               selectedOrgan === 'liver' ? 'bg-emerald-500 text-slate-950 font-bold' : 'text-slate-400 hover:text-white'
@@ -212,6 +205,7 @@ export const OrganotropismMatrixViewer: React.FC<OrganotropismMatrixViewerProps>
             Liver
           </button>
           <button
+            type="button"
             onClick={() => onSelectOrgan('lung')}
             className={`px-2.5 py-1 rounded-lg transition-all ${
               selectedOrgan === 'lung' ? 'bg-cyan-500 text-slate-950 font-bold' : 'text-slate-400 hover:text-white'

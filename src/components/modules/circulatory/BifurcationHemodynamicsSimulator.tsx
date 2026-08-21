@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { Slider } from '../../ui/Slider';
+
 import {
   GitBranch,
   Play,
@@ -351,66 +353,45 @@ export const BifurcationHemodynamicsSimulator: React.FC = () => {
 
       {/* Geometry Sliders & Bifurcation Controls */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 bg-slate-900 border border-slate-800 p-5 rounded-2xl">
-        <div className="space-y-1">
-          <div className="flex justify-between text-xs font-mono">
-            <span className="text-slate-300">Bifurcation Angle:</span>
-            <span className="text-purple-400 font-bold">{bifurcationAngleDeg}°</span>
-          </div>
-          <input
-            type="range"
-            min="30"
-            max="90"
-            value={bifurcationAngleDeg}
-            onChange={(e) => setBifurcationAngleDeg(Number(e.target.value))}
-            className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-purple-400"
-          />
-        </div>
+        <Slider
+          label="Inflow Velocity:"
+          min={5.0}
+          max={40.0}
+          step={1.0}
+          value={inflowVelocityCmS}
+          onChange={(val) => setInflowVelocityCmS(val)}
+          valueDisplay={`${inflowVelocityCmS} cm/s`}
+        />
 
-        <div className="space-y-1">
-          <div className="flex justify-between text-xs font-mono">
-            <span className="text-slate-300">Flow Split Ratio (Branch A):</span>
-            <span className="text-emerald-400 font-bold">{flowSplitRatio}%</span>
-          </div>
-          <input
-            type="range"
-            min="10"
-            max="90"
-            value={flowSplitRatio}
-            onChange={(e) => setFlowSplitRatio(Number(e.target.value))}
-            className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-400"
-          />
-        </div>
+        <Slider
+          label="Bifurcation Angle:"
+          min={30}
+          max={90}
+          step={1}
+          value={bifurcationAngleDeg}
+          onChange={(val) => setBifurcationAngleDeg(val)}
+          valueDisplay={`${bifurcationAngleDeg}°`}
+        />
 
-        <div className="space-y-1">
-          <div className="flex justify-between text-xs font-mono">
-            <span className="text-slate-300">Inflow Velocity:</span>
-            <span className="text-cyan-400 font-bold">{inflowVelocityCmS} cm/s</span>
-          </div>
-          <input
-            type="range"
-            min="5.0"
-            max="40.0"
-            step="1.0"
-            value={inflowVelocityCmS}
-            onChange={(e) => setInflowVelocityCmS(Number(e.target.value))}
-            className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-400"
-          />
-        </div>
+        <Slider
+          label="Flow Split Ratio (Branch A):"
+          min={10}
+          max={90}
+          step={1}
+          value={flowSplitRatio}
+          onChange={(val) => setFlowSplitRatio(val)}
+          valueDisplay={`${flowSplitRatio}%`}
+        />
 
-        <div className="space-y-1">
-          <div className="flex justify-between text-xs font-mono">
-            <span className="text-slate-300">Apex Plaque Stenosis:</span>
-            <span className="text-rose-400 font-bold">{stenosisApexSeverity}%</span>
-          </div>
-          <input
-            type="range"
-            min="0"
-            max="60"
-            value={stenosisApexSeverity}
-            onChange={(e) => setStenosisApexSeverity(Number(e.target.value))}
-            className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-rose-400"
-          />
-        </div>
+        <Slider
+          label="Apex Plaque Stenosis:"
+          min={0}
+          max={60}
+          step={1}
+          value={stenosisApexSeverity}
+          onChange={(val) => setStenosisApexSeverity(val)}
+          valueDisplay={`${stenosisApexSeverity}%`}
+        />
       </div>
     </div>
   );
